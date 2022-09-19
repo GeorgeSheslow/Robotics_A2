@@ -1,24 +1,25 @@
 classdef DobotMagician < handle
-
+%% Variables - Public
     properties(Access =public) 
         name = 'DobotMagician';
+        model
     end
+%% Variables - Private
     properties(Access =private)
         defaultRealQ  = [0,pi/4,pi/4,0,0];
-        model
+        
         useGripper = false
         workspace = [-2 2 -2 2 -0.3 2];
     end
- 
+ %% Public Methods
     methods (Access = public)
-%% Define robot Function  
+%% Constructor
         function self = DobotMagician()
             self.CreateModel();            
             self.PlotAndColourRobot(self.name);
             self.model.animate(self.defaultRealQ);
         end
-
-%% Create the robot model
+%% Create Dobot with DH parameters
         function CreateModel(self)       
             L(1) = Link('d',0.103+0.0362,    'a',0,      'alpha',-pi/2,  'offset',0, 'qlim',[deg2rad(-135),deg2rad(135)]);
             L(2) = Link('d',0,        'a',0.135,  'alpha',0,      'offset',-pi/2, 'qlim',[deg2rad(5),deg2rad(80)]);
@@ -27,9 +28,9 @@ classdef DobotMagician < handle
             L(5) = Link('d',-0.05,      'a',0,      'alpha',0,      'offset',pi, 'qlim',[deg2rad(-85),deg2rad(85)]);
 
             self.model = SerialLink(L,'name',self.name);
-
         end   
-
+    end
+    methods (Access =private)
 %% PlotAndColourRobot
         % Given a robot index, add the glyphs (vertices and faces) and colour them in if data is available 
         function PlotAndColourRobot(self,fileName)
