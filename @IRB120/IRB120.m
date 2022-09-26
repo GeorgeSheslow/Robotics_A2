@@ -1,7 +1,7 @@
 classdef IRB120 < handle
     properties
         model;
-        workspace = [-0.4 0.4 -0.4 0.4 -0.2 1.1];
+        workspace = [-1 1 -1 1 -0.2 1.1];
     end
     methods
         function self = IRB120()
@@ -19,7 +19,7 @@ classdef IRB120 < handle
             L(3) = Link('d',0,'a',0.07,'alpha',-pi/2,'qlim', deg2rad([-360 360]), 'offset', 0);
             L(4) = Link('d',0.302,'a',0,'alpha',-pi/2,'qlim',deg2rad([-360 360]),'offset', 0);
             L(5) = Link('d',0,'a',0,'alpha',-pi/2,'qlim',deg2rad([-360,360]), 'offset',0);
-            L(6) = Link('d',0.072,'a',0,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
+            L(6) = Link('d',-0.072,'a',0,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
 
             self.model = SerialLink(L,'name','IRB120');
         end
