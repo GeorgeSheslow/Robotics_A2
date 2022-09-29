@@ -6,10 +6,9 @@ classdef DobotMagician < handle
     end
 %% Variables - Private
     properties(Access =private)
-        defaultRealQ  = [0,pi/4,pi/4,0,0];
-        
-        useGripper = false
-        workspace = [-2 2 -2 2 -0.3 2];
+        defaultRealQ  = [0,pi/4,pi/4,pi/2];
+        workspace = [-1 1 -1 1 -0.3 1];
+        toolOffset = -0.055;
     end
  %% Public Methods
     methods (Access = public)
@@ -18,28 +17,32 @@ classdef DobotMagician < handle
             self.CreateModel();            
             self.PlotAndColourRobot(self.name);
             self.model.animate(self.defaultRealQ);
+            
+            a = self.model.fkine(self.model.getpos());
+            a(3,4) = a(3,4) + self.toolOffset;
+            hold on;
+            trplot(a);
         end
-%% Create Dobot with DH parameters
-        function CreateModel(self)       
-            L(1) = Link('d',0.103+0.0362,    'a',0,      'alpha',-pi/2,  'offset',0, 'qlim',[deg2rad(-135),deg2rad(135)]);
-            L(2) = Link('d',0,        'a',0.135,  'alpha',0,      'offset',-pi/2, 'qlim',[deg2rad(5),deg2rad(80)]);
-            L(3) = Link('d',0,        'a',0.147,  'alpha',0,      'offset',0, 'qlim',[deg2rad(-5),deg2rad(85)]);
-            L(4) = Link('d',0,        'a',0.06,      'alpha',pi/2,  'offset',-pi/2, 'qlim',[deg2rad(-180),deg2rad(180)]);
-            L(5) = Link('d',-0.05,      'a',0,      'alpha',0,      'offset',pi, 'qlim',[deg2rad(-85),deg2rad(85)]);
-
-            self.model = SerialLink(L,'name',self.name);
-        end   
     end
     methods (Access =private)
+%% Create Dobot with DH parameters
+        function CreateModel(self)       
+            L(1) = Link('d',0.103+0.0362,    'a',0,      'alpha',-pi/2,  'offset',0);
+            L(2) = Link('d',0,        'a',0.135,  'alpha',0,      'offset',-pi/2);
+            L(3) = Link('d',0,        'a',0.147,  'alpha',0,      'offset',0);
+            L(4) = Link('d',0,        'a',0.06,      'alpha',pi/2,  'offset',-pi/2);
+
+            L(1).qlim = [-135 135]*pi/180;
+            L(2).qlim = [5 80]*pi/180;
+            L(3).qlim = [-5 85]*pi/180;
+            L(4).qlim = [5 90]*pi/180;
+            self.model = SerialLink(L,'name',self.name);
+        end   
 %% PlotAndColourRobot
         % Given a robot index, add the glyphs (vertices and faces) and colour them in if data is available 
         function PlotAndColourRobot(self,fileName)
             for linkIndex = 0:self.model.n
-                if self.useGripper && linkIndex == self.model.n
-                    [ faceData, vertexData, plyData{linkIndex+1} ] = plyread([fileName,'_J',num2str(linkIndex),'Gripper.ply'],'tri'); %#ok<AGROW>
-                else
                     [ faceData, vertexData, plyData{linkIndex+1} ] = plyread([fileName,'_J',num2str(linkIndex),'.ply'],'tri'); %#ok<AGROW>
-                end
                 self.model.faces{linkIndex+1} = faceData;
                 self.model.points{linkIndex+1} = vertexData;
             end
