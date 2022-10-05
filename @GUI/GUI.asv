@@ -30,12 +30,8 @@ classdef GUI < matlab.apps.AppBase & handle
             
             % Load the 2 Robot
             self.dobotRobot = DobotMagician();
-            self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
-            self.dobotRobot.model.animate(zeros(1,4));
-            
-            self.IRBRobot = IRB120();
-            self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
-            self.IRBRobot.model.animate(zeros(1,6));
+            self.dobotRobot.base = transl(-0.7,0,0.72);
+            self.IRBRobot = IRB120(); %transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg')
         end
         function setupJogButtons(self)
             % Joint Buttons for Dobot
