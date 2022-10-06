@@ -48,6 +48,17 @@ classdef GUI < matlab.apps.AppBase & handle
         cartBSizeX = 50;
         cartBSizeY = 30;
         
+        cartJoggingDelta = 0.01;
+        
+        % Software Estop
+        estopButton
+        estopBPosX = 1400;
+        estopBPosY = 500;
+        estopBSizeX = 60;
+        estopBSizeY = 40;
+        estopOn = false;
+        estopLock = false;
+        
     end
     methods 
         function self = GUI()
@@ -55,6 +66,7 @@ classdef GUI < matlab.apps.AppBase & handle
             self.simPlot_h = subplot(1,2,1);
             hold(self.simPlot_h, 'on');
             self.setupSim();
+            self.setupCommandButtons();
             self.setupJogButtons();
         end
         function setupSim(self)
@@ -66,9 +78,24 @@ classdef GUI < matlab.apps.AppBase & handle
             self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
             self.dobotRobot.model.animate(zeros(1,4));
             
-%             self.IRBRobot = IRB120();
-%             self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
-%             self.IRBRobot.model.animate(zeros(1,6));
+            self.IRBRobot = IRB120();
+            self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
+            self.IRBRobot.model.animate(zeros(1,6));
+        end
+        function setupCommandButtons(self)
+            % GUI Title
+            uicontrol('Style','text','String','Robotics A2 Simulation','FontSize',20,'position',[900 500 500 100]);
+
+            % GUI Software Estop
+            self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY],'BackgroundColor','red');
+            self.estopButton.Callback = @self.onEstopButton;
+        end
+        function onEstopButton(self, event, app)
+            disp("ESTOP PRESSED!")
+            if estopOn == true
+                
+                estopLock = true
+            end
         end
         function setupJogButtons(self)
             
@@ -149,23 +176,24 @@ classdef GUI < matlab.apps.AppBase & handle
             currentPose = robot.model.fkine(robot.model.getpos());
             currentPosition = currentPose(1:3,4);
             desiredPosition = currentPosition;
-            
-            joggingDelta = 0.01;
-            
+
             switch(dir)
                 case 'x+'
-                    desiredPosition(
+                    desiredPosition(1) = desiredPosition(1) + self.cartJoggingDelta;
                 case 'x-'
-                    disp('x --');
+                    desiredPosition(1) = desiredPosition(1) - self.cartJoggingDelta;
                 case 'y+'
-                    disp('y++');
+                    desiredPosition(2) = desiredPosition(2) + self.cartJoggingDelta;
                 case 'y-'
-                    disp('y--');
+                    desiredPosition(2) = desiredPosition(2) - self.cartJoggingDelta;
                 case 'z+'
-                    disp('z++');
+                    desiredPosition(3) = desiredPosition(3) + self.cartJoggingDelta;
                 case 'z-'
-                    disp('z++');
+                    desiredPosition(3) = desiredPosition(3) - self.cartJoggingDelta;
             end
+            
+            q = robot.model.ikcon(transl(desiredPosition)); %TODO change to RMRC
+            robot.model.animate(q);
         end
     end
 end

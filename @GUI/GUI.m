@@ -57,6 +57,7 @@ classdef GUI < matlab.apps.AppBase & handle
         estopBSizeX = 60;
         estopBSizeY = 40;
         estopOn = false;
+        estopLock = false;
         
     end
     methods 
@@ -86,12 +87,13 @@ classdef GUI < matlab.apps.AppBase & handle
             uicontrol('Style','text','String','Robotics A2 Simulation','FontSize',20,'position',[900 500 500 100]);
 
             % GUI Software Estop
-            self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY],'BackgroundColor','red');
+            self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY]);
             self.estopButton.Callback = @self.onEstopButton;
         end
         function onEstopButton(self, event, app)
-            disp("ESTOP PRESSED!")
-            estopOn = true;
+            self.estopOn = true;
+            self.estopLock = true;
+            self.estopButton.BackgroundColor = 'red';
         end
         function setupJogButtons(self)
             
@@ -162,6 +164,12 @@ classdef GUI < matlab.apps.AppBase & handle
             qlim = robot.model.qlim();
             if (joints(jointID) > qlim(jointID,1)) && (joints(jointID) < qlim(jointID,2))
                 robot.model.animate(joints);
+                % estop check
+                if self.estopLock == true
+                    self.estopLock = false;
+                    self.estopOn = false;
+                    self.estopButton.BackgroundColor = 'white';
+                end
             else
                 disp('jog out of joint limits');
                 disp(jointID);
