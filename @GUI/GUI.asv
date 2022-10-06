@@ -14,7 +14,37 @@ classdef GUI < matlab.apps.AppBase & handle
         
         qPButtonsIRB
         qMButtonsIRB
+        
+        cartButtonsDobot
+        cartButtonsIRB
+        
+        % GUI Button Properties
+        
+        % Joint Buttons for Dobot
+        qBPosXDobot = 1300;
+        qBPosYDobot = 300;
+        
+        % Joint Buttons for Dobot
+        qBPosXIRB = 1000;
+        qBPosYIRB = 300;
+        
+        % Position Variables
+        qBPosXDelta = 70;
+        qBPosYDelta = -30;
+        qBSizeX = 50;
+        qBSizeY = 30;
+        
+        cartButtonPos = [60 30; -60 30; 0 60; 0 30; 60 60; -60 60];
+        cartButtonNames = ['x+';'x-';'z+';'z-';'y+';'y-'];
+            
+        cartBPosXDobot = 1200;
+        cartBPosYDobot = 60;
 
+        cartBPosXIRB = 1000;
+        cartBPosYIRB = 60;
+
+        cartBSizeX = 50;
+        cartBSizeY = 30;
     end
     methods 
         function self = GUI()
@@ -29,22 +59,15 @@ classdef GUI < matlab.apps.AppBase & handle
 %             self.environment = Environment();
             
             % Load the 2 Robot
-            self.dobotRobot = DobotMagician();
-            self.dobotRobot.base = transl(-0.7,0,0.72);
-            self.IRBRobot = IRB120(); %transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg')
+%             self.dobotRobot = DobotMagician();
+%             self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
+%             self.dobotRobot.model.animate(zeros(1,4));
+            
+%             self.IRBRobot = IRB120();
+%             self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
+%             self.IRBRobot.model.animate(zeros(1,6));
         end
         function setupJogButtons(self)
-            % Joint Buttons for Dobot
-            qBPosXDobot = 1300;
-            qBPosYDobot = 300;
-            % Joint Buttons for Dobot
-            qBPosXIRB = 1000;
-            qBPosYIRB = 300;
-            % Position Variables
-            qBPosXDelta = 70;
-            qBPosYDelta = -30;
-            qBSizeX = 50;
-            qBSizeY = 30;
 
             for i = 1:4
                 self.qPButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ qBPosXDobot                 (qBPosYDobot + (i-1)*qBPosYDelta) qBSizeX qBSizeY]);
@@ -59,7 +82,17 @@ classdef GUI < matlab.apps.AppBase & handle
             
                 self.qPButtonsIRB{i}.Callback = @self.onPButtonIRB;
                 self.qMButtonsIRB{i}.Callback = @self.onMButtonIRB;
-            end            
+            end
+
+            
+            for i = 1:size(cartButtonPos,1)
+               self.cartButtonsDobot{i} = uicontrol('String', cartButtonNames(i,:), 'position', [(cartBPosXDobot + cartButtonPos(i,1)) (cartBPosYDobot + cartButtonPos(i,2)) cartBSizeX cartBSizeY]);
+            end
+            for i = 1:size(cartButtonPos,1)
+                self.cartButtonsIRB{i} = uicontrol('String', cartButtonNames(i,:), 'position', [(cartBPosXIRB + cartButtonPos(i,1)) (cartBPosYIRB + cartButtonPos(i,2)) cartBSizeX cartBSizeY]);
+            end
+            
+            uicontrol('Style','text','String','Dobot Buttons','position',[1300 350 100 50]);
         end
         function onPButtonDobot(self, event, app)
             disp(event.String);
