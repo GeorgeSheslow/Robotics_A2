@@ -83,10 +83,15 @@ classdef GUI < matlab.apps.AppBase & handle
         end
         function setupCommandButtons(self)
             % GUI Title
-            % GUI Software Estop
-            self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY],'BackgroundColor','red');
             uicontrol('Style','text','String','Robotics A2 Simulation','FontSize',20,'position',[900 500 500 100]);
 
+            % GUI Software Estop
+            self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY],'BackgroundColor','red');
+            self.estopButton.Callback = @self.onEstopButton;
+        end
+        function onEstopButton(self, event, app)
+            disp("ESTOP PRESSED!")
+            estopOn = true;
         end
         function setupJogButtons(self)
             
