@@ -21,41 +21,32 @@ classdef GUI < matlab.apps.AppBase & handle
         % GUI Button Properties
         
         % Joint Buttons for Dobot
-        qBPosXDobot = 1335;
-        qBPosYDobot = 260;
+        qBPosDobot = [1335 260]; % x,y
         
         % Joint Buttons for IRB
-        qBPosXIRB = 1035;
-        qBPosYIRB = 260;
+        qBPosIRB = [1035 260]; % x,y
         
         % QJog Variables
-        qBPosXDelta = 70;
-        qBPosYDelta = -30;
-        qBSizeX = 50;
-        qBSizeY = 30;
+        qBPosDelta = [70 -30];
+        qBSize = [50 30];
 
         % Cart Buttons for Dobot
-        cartBPosXDobot = 1300;
-        cartBPosYDobot = 300;
+        cartBPosDobot = [1300 300];
 
         % Cart Buttons for IRB
-        cartBPosXIRB = 1000;
-        cartBPosYIRB = 300;
+        cartBPosIRB = [1000 300];
 
         % CartJog Variables
         cartButtonPos = [60 30; -60 30; 0 60; 0 30; 60 60; -60 60];
         cartButtonNames = ['x+';'x-';'z+';'z-';'y+';'y-'];
-        cartBSizeX = 50;
-        cartBSizeY = 30;
+        cartBSize = [50 30];
         
         cartJoggingDelta = 0.01;
         
         % Software Estop
         estopButton
-        estopBPosX = 1350;
-        estopBPosY = 505;
-        estopBSizeX = 60;
-        estopBSizeY = 40;
+        estopBPos = [1350 505];
+        estopBSize = [60 40];
         estopOn = false;
         estopLock = false;
         
@@ -118,7 +109,7 @@ classdef GUI < matlab.apps.AppBase & handle
             self.textPreviewButton.Callback = @self.previewText;
             
             % GUI Software Estop
-            self.estopButton = uicontrol('String','ESTOP','FontSize',13,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY]);
+            self.estopButton = uicontrol('String','ESTOP','FontSize',13,'position',[self.estopBPos(1) self.estopBPos(2) self.estopBSize(1) self.estopBSize(2)]);
             self.estopButton.Callback = @self.onEstopButton;
         end
         function previewText(self, event, app)
@@ -146,36 +137,36 @@ classdef GUI < matlab.apps.AppBase & handle
         function setupJogButtons(self)
             
             % Setup Joint Jogging Buttons for Dobot
-            uicontrol('Style','text','String','Dobot Jog Joints','FontSize',16,'position',[self.qBPosXDobot-80 self.qBPosYDobot+5 150 50]);
+            uicontrol('Style','text','String','Dobot Jog Joints','FontSize',16,'position',[self.qBPosDobot(1)-80 self.qBPosDobot(2)+5 150 50]);
             for i = 1:4
-                self.qPButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ self.qBPosXDobot                     (self.qBPosYDobot + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
-                self.qMButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(self.qBPosXDobot - self.qBPosXDelta) (self.qBPosYDobot + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
+                self.qPButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ self.qBPosDobot(1)                       (self.qBPosDobot(2) + (i-1)*self.qBPosDelta(2)) self.qBSize(1) self.qBSize(2)]);
+                self.qMButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(self.qBPosDobot(1) - self.qBPosDelta(1)) (self.qBPosDobot(2) + (i-1)*self.qBPosDelta(2)) self.qBSize(1) self.qBSize(2)]);
                 
                 self.qPButtonsDobot{i}.Callback = @self.onQButtonDobot;
                 self.qMButtonsDobot{i}.Callback = @self.onQButtonDobot;
             end
             
             % Setup Joint Jogging Buttons for IRB120
-            uicontrol('Style','text','String','IRB120 Jog Joints','FontSize',16,'position',[self.qBPosXIRB-80 self.qBPosYIRB+5 150 50]);
+            uicontrol('Style','text','String','IRB120 Jog Joints','FontSize',16,'position',[self.qBPosIRB(1)-80 self.qBPosIRB(2)+5 150 50]);
             for i = 1:6
-                self.qPButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ self.qBPosXIRB                     (self.qBPosYIRB + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
-                self.qMButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(self.qBPosXIRB - self.qBPosXDelta) (self.qBPosYIRB + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
+                self.qPButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ self.qBPosIRB(1)                     (self.qBPosIRB(2) + (i-1)*self.qBPosDelta(2)) self.qBSize(1) self.qBSize(2)]);
+                self.qMButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(self.qBPosIRB(1) - self.qBPosDelta(1)) (self.qBPosIRB(2) + (i-1)*self.qBPosDelta(2)) self.qBSize(1) self.qBSize(2)]);
             
                 self.qPButtonsIRB{i}.Callback = @self.onQButtonIRB;
                 self.qMButtonsIRB{i}.Callback = @self.onQButtonIRB;
             end
 
             % Setup EE Jogging Buttons for Dobot
-            uicontrol('Style','text','String','Dobot End Effector Jogging','FontSize',16,'position',[self.cartBPosXDobot-50 self.cartBPosYDobot+80 150 50]);
+            uicontrol('Style','text','String','Dobot End Effector Jogging','FontSize',16,'position',[self.cartBPosDobot(1)-50 self.cartBPosDobot(2)+80 150 50]);
             for i = 1:size(self.cartButtonPos,1)
-               self.cartButtonsDobot{i} = uicontrol('String', self.cartButtonNames(i,:), 'position',[(self.cartBPosXDobot + self.cartButtonPos(i,1)) (self.cartBPosYDobot + self.cartButtonPos(i,2)) self.cartBSizeX self.cartBSizeY]);
+               self.cartButtonsDobot{i} = uicontrol('String', self.cartButtonNames(i,:), 'position',[(self.cartBPosDobot(1) + self.cartButtonPos(i,1)) (self.cartBPosDobot(2) + self.cartButtonPos(i,2)) self.cartBSize(1) self.cartBSize(2)]);
                self.cartButtonsDobot{i}.Callback = @self.onCartButtonDobot;
             end
             
             % Setup EE Jogging Buttons for IRB120
-            uicontrol('Style','text','String','IRB120 End Effector Jogging','FontSize',16,'position',[self.cartBPosXIRB-50 self.cartBPosYIRB+80 150 50]);
+            uicontrol('Style','text','String','IRB120 End Effector Jogging','FontSize',16,'position',[self.cartBPosIRB(1)-50 self.cartBPosIRB(2)+80 150 50]);
             for i = 1:size(self.cartButtonPos,1)
-                self.cartButtonsIRB{i} = uicontrol('String', self.cartButtonNames(i,:), 'position', [(self.cartBPosXIRB + self.cartButtonPos(i,1)) (self.cartBPosYIRB + self.cartButtonPos(i,2)) self.cartBSizeX self.cartBSizeY]);
+                self.cartButtonsIRB{i} = uicontrol('String', self.cartButtonNames(i,:), 'position', [(self.cartBPosIRB(1) + self.cartButtonPos(i,1)) (self.cartBPosIRB(2) + self.cartButtonPos(i,2)) self.cartBSize(1) self.cartBSize(2)]);
                 self.cartButtonsIRB{i}.Callback = @self.onCartButtonIRB;
             end
         end
