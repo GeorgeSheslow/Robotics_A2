@@ -3,7 +3,7 @@ classdef IRB120 < handle
         model;
     end
     properties (Access = private)
-        qNeutral  = [0, -pi/2, 0, 0, 0, 0];
+        qNeutral  = [0,pi/4,pi/4,pi/2];
         workspace = [-1 1 -1 1 -0.2 1.1];
         name = 'IRB120';
     end
@@ -11,7 +11,7 @@ classdef IRB120 < handle
         function self = IRB120()
             self.GetIRB120();
             self.PlotAndColourRobot();
-            self.model.animate(self.qNeutral);
+            drawnow
         end
         function q = getQNeutral(self)
             q = self.qNeutral;
@@ -21,6 +21,7 @@ classdef IRB120 < handle
         %% GetIRB120
         % Create and return an IRB120 robot model
         function GetIRB120(self)
+
             L(1) = Link('d',0.29,'a',0,'alpha',-pi/2,'qlim',deg2rad([-360 360]), 'offset',0);
             L(2) = Link('d',0,'a',0.27,'alpha',0,'qlim', deg2rad([-360 360]), 'offset',0);
             L(3) = Link('d',0,'a',0.07,'alpha',-pi/2,'qlim', deg2rad([-360 360]), 'offset', 0);
