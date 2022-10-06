@@ -52,12 +52,22 @@ classdef GUI < matlab.apps.AppBase & handle
         
         % Software Estop
         estopButton
-        estopBPosX = 1400;
+        estopBPosX = 1350;
         estopBPosY = 500;
         estopBSizeX = 60;
         estopBSizeY = 40;
         estopOn = false;
         estopLock = false;
+        
+        % Command Buttons
+        simStartButton
+        simStopButton
+        inputTextEdit
+        simStatus
+        
+        statusPos = [950 510];
+        startButtonPos = [960 480];
+        intputTextPos = [950 438];
         
     end
     methods 
@@ -74,21 +84,49 @@ classdef GUI < matlab.apps.AppBase & handle
 %             self.environment = Environment();
             
             % Load the 2 Robot
-            self.dobotRobot = DobotMagician();
-            self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
-            self.dobotRobot.model.animate(zeros(1,4));
-            
-            self.IRBRobot = IRB120();
-            self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
-            self.IRBRobot.model.animate(zeros(1,6));
+%             self.dobotRobot = DobotMagician();
+%             self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
+%             self.dobotRobot.model.animate(zeros(1,4));
+%             
+%             self.IRBRobot = IRB120();
+%             self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
+%             self.IRBRobot.model.animate(zeros(1,6));
         end
         function setupCommandButtons(self)
             % GUI Title
             uicontrol('Style','text','String','Robotics A2 Simulation','FontSize',20,'position',[900 500 500 100]);
-
+            
+            % Sim Status
+            uicontrol('Style','text','String','Simulation Status:','position',[self.statusPos(1) self.statusPos(2) 90 30]);
+            self.simStatus = uicontrol('Style','text','String','Paused','position',[self.statusPos(1)+90 self.statusPos(2) 100 30]);
+            
+            % Sim Start/Stop Buttons
+            self.simStartButton = uicontrol('String','Start Sim','position',[self.startButtonPos(1) self.startButtonPos(2) 70 30]);
+            self.simStartButton.Callback = @self.startSim;
+            self.simStopButton = uicontrol('String','Stop Sim','position',[self.startButtonPos(1)+90 self.startButtonPos(2) 70 30]);
+            self.simStopButton.Callback = @self.stopSim;
+          
+            % User Input Text for Dobot
+            uicontrol('Style','text','String','Dobot Text: ','position',[self.intputTextPos(1) self.intputTextPos(2) 100 30]);
+            self.inputTextEdit = uicontrol('Style','edit','position',[self.intputTextPos(1) + 80 self.intputTextPos(2)+5  100 30]);
+            self.inputTextEdit.Callback = @self.setInputText;
             % GUI Software Estop
             self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY]);
             self.estopButton.Callback = @self.onEstopButton;
+        end
+        function setInputText(self, event, app)
+            disp('User entered: ');
+            disp(event.String);
+            % TODO generate text trajectory for dobot 
+        end
+        function startSim(self, event, app)
+            % TODO: Add checker, that word has been entered by user
+            disp('Starting Simulation');
+            % TODO make button disbaled, during simulation, or change to a
+            % continue button
+        end
+        function stopSim(self, event, app)
+            disp('Pausing Simulation');
         end
         function onEstopButton(self, event, app)
             self.estopOn = true;
