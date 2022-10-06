@@ -215,7 +215,6 @@ classdef GUI < matlab.apps.AppBase & handle
             end
         end
         function cartJogRobot(self,robot, dir)
-            disp(dir);
             currentPose = robot.model.fkine(robot.model.getpos());
             currentPosition = currentPose(1:3,4);
             desiredPosition = currentPosition;
