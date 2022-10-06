@@ -86,13 +86,13 @@ classdef GUI < matlab.apps.AppBase & handle
 %             self.environment = Environment();
             
             % Load the 2 Robot
-%             self.dobotRobot = DobotMagician();
-%             self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
-%             self.dobotRobot.model.animate(zeros(1,4));
-%             
-%             self.IRBRobot = IRB120();
-%             self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
-%             self.IRBRobot.model.animate(zeros(1,6));
+            self.dobotRobot = DobotMagician();
+            self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
+            self.dobotRobot.model.animate(zeros(1,4));
+            
+            self.IRBRobot = IRB120();
+            self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
+            self.IRBRobot.model.animate(zeros(1,6));
         end
         function setupCommandButtons(self)
             % GUI Title
@@ -115,9 +115,14 @@ classdef GUI < matlab.apps.AppBase & handle
             
             % User text trajectory preview
             self.textPreviewButton = uicontrol('String','Preview','position',[self.intputTextPos(1) + 200 self.intputTextPos(2)+5  70 30]);
+            self.textPreviewButton.Callback = @self.previewText;
+            
             % GUI Software Estop
-            self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY]);
+            self.estopButton = uicontrol('String','ESTOP','FontSize',13,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY]);
             self.estopButton.Callback = @self.onEstopButton;
+        end
+        function previewText(self, event, app)
+            disp('Text trajectory preview');
         end
         function setInputText(self, event, app)
             disp('User entered: ');
