@@ -21,30 +21,33 @@ classdef GUI < matlab.apps.AppBase & handle
         % GUI Button Properties
         
         % Joint Buttons for Dobot
-        qBPosXDobot = 1300;
-        qBPosYDobot = 300;
+        qBPosXDobot = 1335;
+        qBPosYDobot = 260;
         
-        % Joint Buttons for Dobot
-        qBPosXIRB = 1000;
-        qBPosYIRB = 300;
+        % Joint Buttons for IRB
+        qBPosXIRB = 1035;
+        qBPosYIRB = 260;
         
-        % Position Variables
+        % QJog Variables
         qBPosXDelta = 70;
         qBPosYDelta = -30;
         qBSizeX = 50;
         qBSizeY = 30;
-        
+
+        % Cart Buttons for Dobot
+        cartBPosXDobot = 1300;
+        cartBPosYDobot = 300;
+
+        % Cart Buttons for IRB
+        cartBPosXIRB = 1000;
+        cartBPosYIRB = 300;
+
+        % CartJog Variables
         cartButtonPos = [60 30; -60 30; 0 60; 0 30; 60 60; -60 60];
         cartButtonNames = ['x+';'x-';'z+';'z-';'y+';'y-'];
-            
-        cartBPosXDobot = 1200;
-        cartBPosYDobot = 60;
-
-        cartBPosXIRB = 1000;
-        cartBPosYIRB = 60;
-
         cartBSizeX = 50;
         cartBSizeY = 30;
+        
     end
     methods 
         function self = GUI()
@@ -59,56 +62,67 @@ classdef GUI < matlab.apps.AppBase & handle
 %             self.environment = Environment();
             
             % Load the 2 Robot
-%             self.dobotRobot = DobotMagician();
-%             self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
-%             self.dobotRobot.model.animate(zeros(1,4));
+            self.dobotRobot = DobotMagician();
+            self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
+            self.dobotRobot.model.animate(zeros(1,4));
             
 %             self.IRBRobot = IRB120();
 %             self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
 %             self.IRBRobot.model.animate(zeros(1,6));
         end
         function setupJogButtons(self)
-
+            
+            % Setup Joint Jogging Buttons for Dobot
+            uicontrol('Style','text','String','Dobot Jog Joints','FontSize',16,'position',[self.qBPosXDobot-80 self.qBPosYDobot+5 150 50]);
             for i = 1:4
-                self.qPButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ qBPosXDobot                 (qBPosYDobot + (i-1)*qBPosYDelta) qBSizeX qBSizeY]);
-                self.qMButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(qBPosXDobot - qBPosXDelta) (qBPosYDobot + (i-1)*qBPosYDelta) qBSizeX qBSizeY]);
+                self.qPButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ self.qBPosXDobot                     (self.qBPosYDobot + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
+                self.qMButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(self.qBPosXDobot - self.qBPosXDelta) (self.qBPosYDobot + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
                 
-                self.qPButtonsDobot{i}.Callback = @self.onPButtonDobot;
-                self.qMButtonsDobot{i}.Callback = @self.onMButtonDobot;
+                self.qPButtonsDobot{i}.Callback = @self.onQButtonDobot;
+                self.qMButtonsDobot{i}.Callback = @self.onQButtonDobot;
             end
-            for i = 1:6
-                self.qPButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ qBPosXIRB                (qBPosYIRB + (i-1)*qBPosYDelta) qBSizeX qBSizeY]);
-                self.qMButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(qBPosXIRB - qBPosXDelta) (qBPosYIRB + (i-1)*qBPosYDelta) qBSizeX qBSizeY]);
             
-                self.qPButtonsIRB{i}.Callback = @self.onPButtonIRB;
-                self.qMButtonsIRB{i}.Callback = @self.onMButtonIRB;
+            % Setup Joint Jogging Buttons for IRB120
+            uicontrol('Style','text','String','IRB120 Jog Joints','FontSize',16,'position',[self.qBPosXIRB-80 self.qBPosYIRB+5 150 50]);
+            for i = 1:6
+                self.qPButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ self.qBPosXIRB                     (self.qBPosYIRB + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
+                self.qMButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(self.qBPosXIRB - self.qBPosXDelta) (self.qBPosYIRB + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
+            
+                self.qPButtonsIRB{i}.Callback = @self.onQButtonIRB;
+                self.qMButtonsIRB{i}.Callback = @self.onQButtonIRB;
             end
 
-            
-            for i = 1:size(cartButtonPos,1)
-               self.cartButtonsDobot{i} = uicontrol('String', cartButtonNames(i,:), 'position', [(cartBPosXDobot + cartButtonPos(i,1)) (cartBPosYDobot + cartButtonPos(i,2)) cartBSizeX cartBSizeY]);
+            % Setup EE Jogging Buttons for Dobot
+            uicontrol('Style','text','String','Dobot End Effector Jogging','FontSize',16,'position',[self.cartBPosXDobot-50 self.cartBPosYDobot+80 150 50]);
+            for i = 1:size(self.cartButtonPos,1)
+               self.cartButtonsDobot{i} = uicontrol('String', self.cartButtonNames(i,:), 'position',[(self.cartBPosXDobot + self.cartButtonPos(i,1)) (self.cartBPosYDobot + self.cartButtonPos(i,2)) self.cartBSizeX self.cartBSizeY]);
+               self.cartButtonsDobot{i}.Callback = @self.onCartButtonDobot;
             end
-            for i = 1:size(cartButtonPos,1)
-                self.cartButtonsIRB{i} = uicontrol('String', cartButtonNames(i,:), 'position', [(cartBPosXIRB + cartButtonPos(i,1)) (cartBPosYIRB + cartButtonPos(i,2)) cartBSizeX cartBSizeY]);
-            end
             
-            uicontrol('Style','text','String','Dobot Buttons','position',[1300 350 100 50]);
+            % Setup EE Jogging Buttons for IRB120
+            uicontrol('Style','text','String','IRB120 End Effector Jogging','FontSize',16,'position',[self.cartBPosXIRB-50 self.cartBPosYIRB+80 150 50]);
+            for i = 1:size(self.cartButtonPos,1)
+                self.cartButtonsIRB{i} = uicontrol('String', self.cartButtonNames(i,:), 'position', [(self.cartBPosXIRB + self.cartButtonPos(i,1)) (self.cartBPosYIRB + self.cartButtonPos(i,2)) self.cartBSizeX self.cartBSizeY]);
+                self.cartButtonsIRB{i}.Callback = @self.onCartButtonIRB;
+            end
         end
-        function onPButtonDobot(self, event, app)
+        
+        function onQButtonDobot(self, event, app)
             disp(event.String);
-            self.jogRobot(self.dobotRobot, '+', event.String);
+            self.qJogRobot(self.dobotRobot, event.String);
         end
-        function onMButtonDobot(self, event, app)
+        function onQButtonIRB(self, event, app)
             disp(event.String);
-            self.jogRobot(self.dobotRobot, '-', event.String);
+            self.qJogRobot(self.IRBRobot, event.String);
         end
-        function onPButtonIRB(self, event, app)
-            self.jogRobot(self.IRBRobot, '+', event.String);
+        function onCartButtonDobot(self, event, app)
+            self.cartJogRobot(self.dobotRobot, event.String);
         end
-        function onMButtonIRB(self, event, app)
-            self.jogRobot(self.IRBRobot, '-', event.String);
+        function onCartButtonIRB(self, event, app)
+            self.cartJogRobot(self.IRBRobot, event.String);
         end
-        function jogRobot(self,robot,dir,jointID)
+        function qJogRobot(self,robot,jointID)
+            dir = jointID(3);
             id = regexp(jointID, '\d+', 'match');
             id = [id{:}];
             jointID = str2double(id);
@@ -128,6 +142,29 @@ classdef GUI < matlab.apps.AppBase & handle
             else
                 disp('jog out of joint limits');
                 disp(jointID);
+            end
+        end
+        function cartJogRobot(self,robot, dir)
+            disp(dir);
+            currentPose = robot.model.fkine(robot.model.getpos());
+            currentPosition = currentPose(1:3,4);
+            desiredPosition = currentPosition;
+            
+            joggingDelta = 0.01;
+            
+            switch(dir)
+                case 'x+'
+                    desiredPosition(
+                case 'x-'
+                    disp('x --');
+                case 'y+'
+                    disp('y++');
+                case 'y-'
+                    disp('y--');
+                case 'z+'
+                    disp('z++');
+                case 'z-'
+                    disp('z++');
             end
         end
     end

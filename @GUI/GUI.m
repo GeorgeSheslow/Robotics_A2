@@ -48,6 +48,8 @@ classdef GUI < matlab.apps.AppBase & handle
         cartBSizeX = 50;
         cartBSizeY = 30;
         
+        cartJoggingDelta = 0.01;
+        
     end
     methods 
         function self = GUI()
@@ -62,13 +64,13 @@ classdef GUI < matlab.apps.AppBase & handle
 %             self.environment = Environment();
             
             % Load the 2 Robot
-%             self.dobotRobot = DobotMagician();
-%             self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
-%             self.dobotRobot.model.animate(zeros(1,4));
+            self.dobotRobot = DobotMagician();
+            self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
+            self.dobotRobot.model.animate(zeros(1,4));
             
-%             self.IRBRobot = IRB120();
-%             self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
-%             self.IRBRobot.model.animate(zeros(1,6));
+            self.IRBRobot = IRB120();
+            self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
+            self.IRBRobot.model.animate(zeros(1,6));
         end
         function setupJogButtons(self)
             
@@ -78,8 +80,8 @@ classdef GUI < matlab.apps.AppBase & handle
                 self.qPButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ self.qBPosXDobot                     (self.qBPosYDobot + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
                 self.qMButtonsDobot{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(self.qBPosXDobot - self.qBPosXDelta) (self.qBPosYDobot + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
                 
-                self.qPButtonsDobot{i}.Callback = @self.onPButtonDobot;
-                self.qMButtonsDobot{i}.Callback = @self.onMButtonDobot;
+                self.qPButtonsDobot{i}.Callback = @self.onQButtonDobot;
+                self.qMButtonsDobot{i}.Callback = @self.onQButtonDobot;
             end
             
             % Setup Joint Jogging Buttons for IRB120
@@ -88,39 +90,41 @@ classdef GUI < matlab.apps.AppBase & handle
                 self.qPButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'+'], 'position', [ self.qBPosXIRB                     (self.qBPosYIRB + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
                 self.qMButtonsIRB{i} = uicontrol('String', ['q',num2str(i),'-'], 'position', [(self.qBPosXIRB - self.qBPosXDelta) (self.qBPosYIRB + (i-1)*self.qBPosYDelta) self.qBSizeX self.qBSizeY]);
             
-                self.qPButtonsIRB{i}.Callback = @self.onPButtonIRB;
-                self.qMButtonsIRB{i}.Callback = @self.onMButtonIRB;
+                self.qPButtonsIRB{i}.Callback = @self.onQButtonIRB;
+                self.qMButtonsIRB{i}.Callback = @self.onQButtonIRB;
             end
 
             % Setup EE Jogging Buttons for Dobot
             uicontrol('Style','text','String','Dobot End Effector Jogging','FontSize',16,'position',[self.cartBPosXDobot-50 self.cartBPosYDobot+80 150 50]);
             for i = 1:size(self.cartButtonPos,1)
                self.cartButtonsDobot{i} = uicontrol('String', self.cartButtonNames(i,:), 'position',[(self.cartBPosXDobot + self.cartButtonPos(i,1)) (self.cartBPosYDobot + self.cartButtonPos(i,2)) self.cartBSizeX self.cartBSizeY]);
+               self.cartButtonsDobot{i}.Callback = @self.onCartButtonDobot;
             end
             
             % Setup EE Jogging Buttons for IRB120
             uicontrol('Style','text','String','IRB120 End Effector Jogging','FontSize',16,'position',[self.cartBPosXIRB-50 self.cartBPosYIRB+80 150 50]);
             for i = 1:size(self.cartButtonPos,1)
                 self.cartButtonsIRB{i} = uicontrol('String', self.cartButtonNames(i,:), 'position', [(self.cartBPosXIRB + self.cartButtonPos(i,1)) (self.cartBPosYIRB + self.cartButtonPos(i,2)) self.cartBSizeX self.cartBSizeY]);
+                self.cartButtonsIRB{i}.Callback = @self.onCartButtonIRB;
             end
-            
-            
         end
-        function onPButtonDobot(self, event, app)
+        
+        function onQButtonDobot(self, event, app)
             disp(event.String);
-            self.jogRobot(self.dobotRobot, '+', event.String);
+            self.qJogRobot(self.dobotRobot, event.String);
         end
-        function onMButtonDobot(self, event, app)
+        function onQButtonIRB(self, event, app)
             disp(event.String);
-            self.jogRobot(self.dobotRobot, '-', event.String);
+            self.qJogRobot(self.IRBRobot, event.String);
         end
-        function onPButtonIRB(self, event, app)
-            self.jogRobot(self.IRBRobot, '+', event.String);
+        function onCartButtonDobot(self, event, app)
+            self.cartJogRobot(self.dobotRobot, event.String);
         end
-        function onMButtonIRB(self, event, app)
-            self.jogRobot(self.IRBRobot, '-', event.String);
+        function onCartButtonIRB(self, event, app)
+            self.cartJogRobot(self.IRBRobot, event.String);
         end
-        function jogRobot(self,robot,dir,jointID)
+        function qJogRobot(self,robot,jointID)
+            dir = jointID(3);
             id = regexp(jointID, '\d+', 'match');
             id = [id{:}];
             jointID = str2double(id);
@@ -141,6 +145,30 @@ classdef GUI < matlab.apps.AppBase & handle
                 disp('jog out of joint limits');
                 disp(jointID);
             end
+        end
+        function cartJogRobot(self,robot, dir)
+            disp(dir);
+            currentPose = robot.model.fkine(robot.model.getpos());
+            currentPosition = currentPose(1:3,4);
+            desiredPosition = currentPosition;
+
+            switch(dir)
+                case 'x+'
+                    desiredPosition(1) = desiredPosition(1) + self.cartJoggingDelta;
+                case 'x-'
+                    desiredPosition(1) = desiredPosition(1) - self.cartJoggingDelta;
+                case 'y+'
+                    desiredPosition(2) = desiredPosition(2) + self.cartJoggingDelta;
+                case 'y-'
+                    desiredPosition(2) = desiredPosition(2) - self.cartJoggingDelta;
+                case 'z+'
+                    desiredPosition(3) = desiredPosition(3) + self.cartJoggingDelta;
+                case 'z-'
+                    desiredPosition(3) = desiredPosition(3) - self.cartJoggingDelta;
+            end
+            
+            q = robot.model.ikcon(transl(desiredPosition)); %TODO change to RMRC
+            robot.model.animate(q);
         end
     end
 end
