@@ -1,4 +1,4 @@
-function qMatrix = RMRCTraj(robot, x, theta)
+function qMatrix = FullRMRCrobot, x, theta)
 
     epsilon = 0.0001;      % Threshold value for manipulability/Damped Least Squares
     W = diag([1 1 1 0.1 0.1 0.1]);    % Weighting matrix for the velocity vector
