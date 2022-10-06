@@ -53,7 +53,7 @@ classdef GUI < matlab.apps.AppBase & handle
         % Software Estop
         estopButton
         estopBPosX = 1350;
-        estopBPosY = 500;
+        estopBPosY = 505;
         estopBSizeX = 60;
         estopBSizeY = 40;
         estopOn = false;
@@ -63,11 +63,13 @@ classdef GUI < matlab.apps.AppBase & handle
         simStartButton
         simStopButton
         inputTextEdit
+        textPreviewButton
         simStatus
         
-        statusPos = [950 510];
-        startButtonPos = [960 480];
-        intputTextPos = [950 438];
+        statusPos = [950 505];
+        startButtonPos = [1150 510];
+        intputTextPos = [950 445];
+        
         
     end
     methods 
@@ -97,8 +99,8 @@ classdef GUI < matlab.apps.AppBase & handle
             uicontrol('Style','text','String','Robotics A2 Simulation','FontSize',20,'position',[900 500 500 100]);
             
             % Sim Status
-            uicontrol('Style','text','String','Simulation Status:','position',[self.statusPos(1) self.statusPos(2) 90 30]);
-            self.simStatus = uicontrol('Style','text','String','Paused','position',[self.statusPos(1)+90 self.statusPos(2) 100 30]);
+            uicontrol('Style','text','String','Simulation Status:','position',[self.statusPos(1) self.statusPos(2)-5 90 30]);
+            self.simStatus = uicontrol('Style','text','String','Paused','FontSize',13,'position',[self.statusPos(1)+90 self.statusPos(2) 100 30]);
             
             % Sim Start/Stop Buttons
             self.simStartButton = uicontrol('String','Start Sim','position',[self.startButtonPos(1) self.startButtonPos(2) 70 30]);
@@ -110,6 +112,9 @@ classdef GUI < matlab.apps.AppBase & handle
             uicontrol('Style','text','String','Dobot Text: ','position',[self.intputTextPos(1) self.intputTextPos(2) 100 30]);
             self.inputTextEdit = uicontrol('Style','edit','position',[self.intputTextPos(1) + 80 self.intputTextPos(2)+5  100 30]);
             self.inputTextEdit.Callback = @self.setInputText;
+            
+            % User text trajectory preview
+            self.textPreviewButton = uicontrol('String','Preview','position',[self.intputTextPos(1) + 200 self.intputTextPos(2)+5  70 30]);
             % GUI Software Estop
             self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY]);
             self.estopButton.Callback = @self.onEstopButton;

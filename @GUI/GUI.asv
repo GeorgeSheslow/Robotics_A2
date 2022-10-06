@@ -53,7 +53,7 @@ classdef GUI < matlab.apps.AppBase & handle
         % Software Estop
         estopButton
         estopBPosX = 1350;
-        estopBPosY = 500;
+        estopBPosY = 505;
         estopBSizeX = 60;
         estopBSizeY = 40;
         estopOn = false;
@@ -65,9 +65,10 @@ classdef GUI < matlab.apps.AppBase & handle
         inputTextEdit
         simStatus
         
-        statusPos = [950 510];
-        startButtonPos = [960 480];
-        intputTextPos = [950 438];
+        statusPos = [950 505];
+        startButtonPos = [1150 510];
+        intputTextPos = [900 445];
+        textPreviewBu
         
     end
     methods 
@@ -97,8 +98,8 @@ classdef GUI < matlab.apps.AppBase & handle
             uicontrol('Style','text','String','Robotics A2 Simulation','FontSize',20,'position',[900 500 500 100]);
             
             % Sim Status
-            uicontrol('Style','text','String','Simulation Status:','position',[self.statusPos(1) self.statusPos(2) 90 30]);
-            self.simStatus = uicontrol('Style','text','String','Paused','position',[self.statusPos(1)+90 self.statusPos(2) 100 30]);
+            uicontrol('Style','text','String','Simulation Status:','position',[self.statusPos(1) self.statusPos(2)-5 90 30]);
+            self.simStatus = uicontrol('Style','text','String','Paused','FontSize',13,'position',[self.statusPos(1)+90 self.statusPos(2) 100 30]);
             
             % Sim Start/Stop Buttons
             self.simStartButton = uicontrol('String','Start Sim','position',[self.startButtonPos(1) self.startButtonPos(2) 70 30]);
@@ -122,7 +123,8 @@ classdef GUI < matlab.apps.AppBase & handle
         function startSim(self, event, app)
             % TODO: Add checker, that word has been entered by user
             disp('Starting Simulation');
-            % TODO make button disbaled, during simulation, or c
+            % TODO make button disbaled, during simulation, or change to a
+            % continue button
         end
         function stopSim(self, event, app)
             disp('Pausing Simulation');
