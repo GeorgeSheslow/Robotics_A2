@@ -50,6 +50,14 @@ classdef GUI < matlab.apps.AppBase & handle
         
         cartJoggingDelta = 0.01;
         
+        % Software Estop
+        estopButton
+        estopBPosX = 1400;
+        estopBPosY = 500;
+        estopBSizeX = 60;
+        estopBSizeY = 40;
+        estopOn = false;
+        
     end
     methods 
         function self = GUI()
@@ -57,6 +65,7 @@ classdef GUI < matlab.apps.AppBase & handle
             self.simPlot_h = subplot(1,2,1);
             hold(self.simPlot_h, 'on');
             self.setupSim();
+            self.setupCommandButtons();
             self.setupJogButtons();
         end
         function setupSim(self)
@@ -71,6 +80,13 @@ classdef GUI < matlab.apps.AppBase & handle
             self.IRBRobot = IRB120();
             self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
             self.IRBRobot.model.animate(zeros(1,6));
+        end
+        function setupCommandButtons(self)
+            % GUI Title
+            % GUI Software Estop
+            self.estopButton = uicontrol('String','ESTOP','FontSize',14,'position',[self.estopBPosX self.estopBPosY self.estopBSizeX self.estopBSizeY],'BackgroundColor','red');
+            uicontrol('Style','text','String','Robotics A2 Simulation','FontSize',20,'position',[900 500 500 100]);
+
         end
         function setupJogButtons(self)
             
