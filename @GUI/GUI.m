@@ -79,11 +79,11 @@ classdef GUI < matlab.apps.AppBase & handle
             % Load the 2 Robot
             self.dobotRobot = DobotMagician();
             self.dobotRobot.model.base = transl(-0.7,0,0); %0.72
-            self.dobotRobot.model.animate(zeros(1,4));
+            self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
             
             self.IRBRobot = IRB120();
             self.IRBRobot.model.base = transl(0.2,0,0)*rpy2tr(0,0,180,'deg');
-            self.IRBRobot.model.animate(zeros(1,6));
+            self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
         end
         function setupCommandButtons(self)
             % GUI Title
