@@ -1,14 +1,14 @@
 classdef DobotMagician < handle
 %% Variables - Public
     properties(Access =public) 
-        name = 'DobotMagician';
         model
         toolOffset = -0.055;
     end
 %% Variables - Private
     properties(Access =private)
-        defaultRealQ  = [0,pi/4,pi/4,pi/2];
+        qNeutral  = [0,pi/4,pi/4,pi/2];
         workspace = [-1 1 -1 1 -0.3 1];
+        name = 'DobotMagician';
     end
  %% Public Methods
     methods (Access = public)
@@ -16,7 +16,10 @@ classdef DobotMagician < handle
         function self = DobotMagician()
             self.CreateModel();            
             self.PlotAndColourRobot(self.name);
-            self.model.animate(self.defaultRealQ);
+            self.model.animate(self.qNeutral);
+        end
+        function q = getQNeutral(self)
+            q = self.qNeutral;
         end
     end
     methods (Access =private)
