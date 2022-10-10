@@ -2,15 +2,35 @@ classdef Environment
 
     properties
         table
-        trays
+        tray
+        estop
+        extinguisher
+        fence
+        light
         %any other objects
     end
     
     methods (Access =public)
         function self = Environment()
-            surf([-1.8,-1.8;1.8,1.8],[-2,3;-2,3],[0.001,0.001;0.001,0.001],'CData',imread('concrete.jpg'),'FaceColor','texturemap');
+            surf([-1.8,-1.8;1.8,1.8],[-2,3;-2,3],[-0.001,-0.001;-0.001,-0.001],'CData',imread('concrete.jpg'),'FaceColor','texturemap');
+            axis equal
             hold on
             self.AddObj('table',transl(0,0,0));
+            self.AddObj('estop',transl(0.6,0.4,0.71));
+            self.AddObj('tray',transl(0,0,0.71));
+            
+            self.AddObj('extinguisher',transl(-0.8,-0.7,0));
+
+            self.AddObj('fence',transl(1,0,0));
+            self.AddObj('fence',transl(-1,0,0));
+            self.AddObj('fence',transl(0,-1,0)*trotz(90,'deg'));
+            self.AddObj('fence',transl(0,1,0)*trotz(90,'deg'));
+
+            self.AddObj('light',transl(0.6,1,0.8));
+            self.AddObj('light',transl(-0.6,1,0.8));
+            self.AddObj('light',transl(0.6,-1,0.8));
+            self.AddObj('light',transl(-0.6,-1,0.8));
+            
         end
     end
     methods (Static)
