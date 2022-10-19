@@ -166,8 +166,6 @@ plot_robjointpos(history)
 figure()
 plot_robjointvel(history)
 
-end
-
 %% Functions for plotting
 
  function plot_p(history,uv_star,camera)
