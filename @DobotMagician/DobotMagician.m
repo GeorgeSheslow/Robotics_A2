@@ -1,25 +1,25 @@
 classdef DobotMagician < handle
 %% Variables - Public
     properties(Access =public) 
-        model
-        toolOffset = -0.055;
+        name = 'DobotMagician';
+        model;
+        toolOffset = 0.07;
+        defaultRealQ  = [0,pi/4,pi/4,pi/2];
+        trajGen;
     end
 %% Variables - Private
     properties(Access =private)
-        qNeutral  = [0,pi/4,pi/4,pi/2];
-        workspace = [-1 1 -1 1 -0.3 1];
-        name = 'DobotMagician';
+        workspace = [-0.5 0.5 -0.5 0.5 -0.1 0.7];
     end
  %% Public Methods
     methods (Access = public)
 %% Constructor
-        function self = DobotMagician()
-            self.CreateModel();            
+        function self = DobotMagician(T)
+            self.CreateModel();
+            self.model.base = T;
             self.PlotAndColourRobot(self.name);
-            self.model.animate(self.qNeutral);
-        end
-        function q = getQNeutral(self)
-            q = self.qNeutral;
+            self.model.animate(self.defaultRealQ);
+            self.trajGen = RMRCTrajGen(self.model);
         end
     end
     methods (Access =private)
@@ -31,9 +31,9 @@ classdef DobotMagician < handle
             L(4) = Link('d',0,        'a',0.06,      'alpha',pi/2,  'offset',-pi/2);
 
             L(1).qlim = [-135 135]*pi/180;
-            L(2).qlim = [0 85]*pi/180;
-            L(3).qlim = [0 130]*pi/180;
-            L(4).qlim = [5 90]*pi/180;
+            L(2).qlim = [5 80]*pi/180;
+            L(3).qlim = [-5 85]*pi/180;
+            L(4).qlim = [-90 90]*pi/180;
             self.model = SerialLink(L,'name',self.name);
         end   
 %% PlotAndColourRobot
