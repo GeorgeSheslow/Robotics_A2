@@ -1,32 +1,25 @@
 classdef IRB120 < handle
-    properties (Access = public)
+    properties
         model;
-    end
-    properties (Access = private)
-        qNeutral  = [0, -pi/2, 0, 0, 0, 0];
         workspace = [-1 1 -1 1 -0.2 1.1];
-        name = 'IRB120';
+        trajGen;
     end
-    methods (Access = public)
-        function self = IRB120()
+    methods
+        function self = IRB120(base)
             self.GetIRB120();
+            self.model.base = base;
             self.PlotAndColourRobot();
-            self.model.animate(self.qNeutral);
+            self.trajGen = RMRCTrajGen(self.model);
         end
-        function q = getQNeutral(self)
-            q = self.qNeutral;
-        end
-    end
-    methods (Access = private)
         %% GetIRB120
         % Create and return an IRB120 robot model
         function GetIRB120(self)
-            L(1) = Link('d',0.29,'a',0,'alpha',-pi/2,'qlim',deg2rad([-165 165]), 'offset',0);
-            L(2) = Link('d',0,'a',0.27,'alpha',0,'qlim', deg2rad([-110 110]), 'offset',0);
-            L(3) = Link('d',0,'a',0.07,'alpha',-pi/2,'qlim', deg2rad([-110 70]), 'offset', 0);
-            L(4) = Link('d',0.302,'a',0,'alpha',-pi/2,'qlim',deg2rad([-160 160]),'offset', 0);
-            L(5) = Link('d',0,'a',0,'alpha',-pi/2,'qlim',deg2rad([-120 120]), 'offset',0);
-            L(6) = Link('d',-0.072,'a',0,'alpha',0,'qlim',deg2rad([-400 400]), 'offset', 0);
+            L(1) = Link('d',0.29,'a',0,'alpha',-pi/2,'qlim',deg2rad([-360 360]), 'offset',0);
+            L(2) = Link('d',0,'a',0.27,'alpha',0,'qlim', deg2rad([-110 110]), 'offset',-pi/2);
+            L(3) = Link('d',0,'a',0.07,'alpha',-pi/2,'qlim', deg2rad([-220 70]), 'offset', 0);
+            L(4) = Link('d',0.302,'a',0,'alpha',-pi/2,'qlim',deg2rad([-360 360]),'offset', 0);
+            L(5) = Link('d',0,'a',0,'alpha',-pi/2,'qlim',deg2rad([-100,100]), 'offset',0);
+            L(6) = Link('d',-0.072,'a',0,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
 
             self.model = SerialLink(L,'name','IRB120');
         end
