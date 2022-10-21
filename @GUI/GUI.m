@@ -16,36 +16,40 @@ classdef GUI < matlab.apps.AppBase & handle
         qMButtonsIRB
         
         cartButtonsDobot
-        cartButtonsIRB
+        cartSelectButtonsDobot
+        cartDirSelectDobot
         
+        cartButtonsIRB
+        cartSelectButtonsIRB
+        cartDirSelectIRB
         % GUI Button Properties
         
         % Joint Buttons for Dobot
-        qBPosDobot = [1335 260]; % x,y
+        qBPosDobot = [1335 360]; % x,y
         
         % Joint Buttons for IRB
-        qBPosIRB = [1035 260]; % x,y
+        qBPosIRB = [1035 360]; % x,y
         
         % QJog Variables
         qBPosDelta = [70 -30];
         qBSize = [50 30];
 
         % Cart Buttons for Dobot
-        cartBPosDobot = [1300 300];
+        cartBPosDobot = [1300 430];
 
         % Cart Buttons for IRB
-        cartBPosIRB = [1000 300];
+        cartBPosIRB = [1000 430];
 
         % CartJog Variables
         cartButtonPos = [60 30; -60 30; 0 60; 0 30; 60 60; -60 60];
         cartButtonNames = ['x+';'x-';'z+';'z-';'y+';'y-'];
         cartBSize = [50 30];
         
-        cartJoggingDelta = 0.01;
+        cartJoggingDelta = 0.02;
         
         % Software Estop
         estopButton
-        estopBPos = [1350 505];
+        estopBPos = [1350 705];
         estopBSize = [60 40];
         estopOn = false;
         estopLock = false;
@@ -57,9 +61,10 @@ classdef GUI < matlab.apps.AppBase & handle
         textPreviewButton
         simStatus
         
-        statusPos = [950 505];
-        startButtonPos = [1150 510];
-        intputTextPos = [950 445];
+        statusPos = [950 705];
+        startButtonPos = [1150 710];
+        intputTextPos = [950 645];
+        titlePos = [900 700];
         
         
     end
@@ -77,17 +82,15 @@ classdef GUI < matlab.apps.AppBase & handle
             self.environment = Environment();
             
             % Load the 2 Robot
-            self.dobotRobot = DobotMagician();
-            self.dobotRobot.model.base = transl(-0.7,0,0.71); %0.72
-            self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
+            self.dobotRobot = DobotMagician(transl(-0.7,0,0.72)); %table height: 0.72
+%             self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
             
-            self.IRBRobot = IRB120();
-            self.IRBRobot.model.base = transl(0.2,0,0.71)*rpy2tr(0,0,180,'deg');
-            self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
+            self.IRBRobot = IRB120(transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg'));
+%             self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
         end
         function setupCommandButtons(self)
             % GUI Title
-            uicontrol('Style','text','String','Robotics A2 Simulation','FontSize',20,'position',[900 500 500 100]);
+            uicontrol('Style','text','String','Robotics A2 Simulation: Card Signing Robots','FontSize',20,'position',[self.titlePos(1) self.titlePos(2) 500 100]);
             
             % Sim Status
             uicontrol('Style','text','String','Simulation Status:','position',[self.statusPos(1) self.statusPos(2)-5 90 30]);
@@ -157,20 +160,64 @@ classdef GUI < matlab.apps.AppBase & handle
             end
 
             % Setup EE Jogging Buttons for Dobot
-            uicontrol('Style','text','String','Dobot End Effector Jogging','FontSize',16,'position',[self.cartBPosDobot(1)-50 self.cartBPosDobot(2)+80 150 50]);
-            for i = 1:size(self.cartButtonPos,1)
-               self.cartButtonsDobot{i} = uicontrol('String', self.cartButtonNames(i,:), 'position',[(self.cartBPosDobot(1) + self.cartButtonPos(i,1)) (self.cartBPosDobot(2) + self.cartButtonPos(i,2)) self.cartBSize(1) self.cartBSize(2)]);
-               self.cartButtonsDobot{i}.Callback = @self.onCartButtonDobot;
-            end
-            
+            uicontrol('Style','text','String','Dobot End Effector Jogging','FontSize',16,'position',[self.cartBPosDobot(1)-50 self.cartBPosDobot(2)+105 150 50]);
+                % +/- buttons
+            self.cartButtonsDobot{1} = uicontrol('String','+','position',[(self.cartBPosDobot(1) + self.cartButtonPos(1,1)) (self.cartBPosDobot(2) + self.cartButtonPos(1,2)) self.cartBSize(1) self.cartBSize(2)]);
+            self.cartButtonsDobot{1}.Callback = @self.onCartButtonsDobot;
+            self.cartButtonsDobot{2} = uicontrol('String','-','position',[(self.cartBPosDobot(1) + self.cartButtonPos(2,1)) (self.cartBPosDobot(2) + self.cartButtonPos(2,2)) self.cartBSize(1) self.cartBSize(2)]);
+            self.cartButtonsDobot{2}.Callback = @self.onCartButtonsDobot;
+                % x,y,z select
+            self.cartSelectButtonsDobot{1} = uicontrol('Style','radiobutton','String','x','position',[1250 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsDobot{1}.Callback = @self.OnCartSelectButtonsDobot;
+            self.cartSelectButtonsDobot{2} = uicontrol('Style','radiobutton','String','y','position',[1300 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsDobot{2}.Callback = @self.OnCartSelectButtonsDobot;
+            self.cartSelectButtonsDobot{3} = uicontrol('Style','radiobutton','String','z','position',[1350 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsDobot{3}.Callback = @self.OnCartSelectButtonsDobot;
+           
             % Setup EE Jogging Buttons for IRB120
-            uicontrol('Style','text','String','IRB120 End Effector Jogging','FontSize',16,'position',[self.cartBPosIRB(1)-50 self.cartBPosIRB(2)+80 150 50]);
-            for i = 1:size(self.cartButtonPos,1)
-                self.cartButtonsIRB{i} = uicontrol('String', self.cartButtonNames(i,:), 'position', [(self.cartBPosIRB(1) + self.cartButtonPos(i,1)) (self.cartBPosIRB(2) + self.cartButtonPos(i,2)) self.cartBSize(1) self.cartBSize(2)]);
-                self.cartButtonsIRB{i}.Callback = @self.onCartButtonIRB;
+            uicontrol('Style','text','String','IRB120 End Effector Jogging','FontSize',16,'position',[self.cartBPosIRB(1)-50 self.cartBPosIRB(2)+105 150 50]);
+                % +/- buttons
+            self.cartButtonsIRB{1} = uicontrol('String','+','position',[(self.cartBPosIRB(1) + self.cartButtonPos(1,1)) (self.cartBPosIRB(2) + self.cartButtonPos(1,2)) self.cartBSize(1) self.cartBSize(2)]);
+            self.cartButtonsIRB{1}.Callback = @self.onCartButtonsIRB;
+            self.cartButtonsIRB{2} = uicontrol('String','-','position',[(self.cartBPosIRB(1) + self.cartButtonPos(2,1)) (self.cartBPosIRB(2) + self.cartButtonPos(2,2)) self.cartBSize(1) self.cartBSize(2)]);
+            self.cartButtonsIRB{2}.Callback = @self.onCartButtonsIRB;
+                % x,y,z select
+            self.cartSelectButtonsIRB{1} = uicontrol('Style','radiobutton','String','x','position',[950 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsIRB{1}.Callback = @self.OnCartSelectButtonsIRB;
+            self.cartSelectButtonsIRB{2} = uicontrol('Style','radiobutton','String','y','position',[1000 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsIRB{2}.Callback = @self.OnCartSelectButtonsIRB;
+            self.cartSelectButtonsIRB{3} = uicontrol('Style','radiobutton','String','z','position',[1050 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsIRB{3}.Callback = @self.OnCartSelectButtonsIRB;
+           
+        end
+        function onCartButtonsDobot(self, event, app)
+            jogType = [self.cartDirSelectDobot,event.String];
+            self.cartJogRobot(self.dobotRobot,jogType);
+        end
+        function onCartButtonsIRB(self, event, app)
+            jogType = [self.cartDirSelectIRB,event.String];
+            self.cartJogRobot(self.IRBRobot,jogType);
+        end        
+        function OnCartSelectButtonsDobot(self, event, app)
+            buttonName = event.String;
+            disp(size(self.cartSelectButtonsDobot));
+            self.cartDirSelectDobot = buttonName;
+            for i = 1:size(self.cartSelectButtonsDobot,2)
+                if self.cartSelectButtonsDobot{i}.String ~= buttonName
+                    self.cartSelectButtonsDobot{i}.Value = 0;
+                end
             end
         end
-        
+        function OnCartSelectButtonsIRB(self, event, app)
+            buttonName = event.String;
+            disp(size(self.cartSelectButtonsIRB));
+            self.cartDirSelectIRB = buttonName;
+            for i = 1:size(self.cartSelectButtonsIRB,2)
+                if self.cartSelectButtonsIRB{i}.String ~= buttonName
+                    self.cartSelectButtonsIRB{i}.Value = 0;
+                end
+            end
+        end
         function onQButtonDobot(self, event, app)
             disp(event.String);
             self.qJogRobot(self.dobotRobot, event.String);
@@ -234,8 +281,9 @@ classdef GUI < matlab.apps.AppBase & handle
                     desiredPosition(3) = desiredPosition(3) - self.cartJoggingDelta;
             end
             
-            q = robot.model.ikcon(transl(desiredPosition)); %TODO change to RMRC
+            q = robot.model.ikcon(transl(desiredPosition));
             robot.model.animate(q);
+%             [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),3);
+%             robot.trajGen.animateQ(qMatrix)
         end
     end
-end

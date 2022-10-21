@@ -30,6 +30,11 @@ classdef RMRCTrajGen
             [x, theta] = self.lineTraj(currentPoint(1:3,4)',point(1:3,4)');
             q = self.getRMRC(x, theta,self.steps);
         end
+       function [x, q] = getQForLineTrajWSteps(self, point, steps)
+            currentPoint = self.robot.fkine(self.robot.getpos());
+            [x, theta] = self.lineTraj(currentPoint(1:3,4)',point(1:3,4)');
+            q = self.getRMRC(x, theta,steps);
+        end
         function [x, q] = getQForTraj(self,traj)
             for i = 1:size(traj,2)
                 x(1:3,i) = traj(:,i)';
