@@ -6,29 +6,30 @@
 pStar = [662 362 362 662; 362 362 662 662];
 
 %Create 3D points
-P=[1.8,1.8,1.8,1.8;
--0.25,0.25,0.25,-0.25;
- 1,1,0.25,0.25];
+P=[1,1,1,1;
+-0.125,0.125,0.125,-0.125;
+ 0.6,0.6,0.35,0.35];
 
 
 % Make robot
 r = IRB120(); 
+% r = UR10();
 
 
 %Initial pose
-%q0 = [pi/2; -pi/3; -pi/3; -pi/6; 0; 0];
+% q0 = [pi/2; -pi/3; -pi/3; -pi/6; 0; 0];
 q0 = [0; -pi/2; 0; 0; 0; 0];
 
 % Add the camera
 cam = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
-'resolution', [1024 1024], 'centre', [512 512],'name', 'Dobotcamera');
+'resolution', [1024 1024], 'centre', [512 512],'name', 'IRBCamera');
 
 % frame rate
 fps = 25;
 
 %Define values
 %gain of the controler
-lambda = 0.8;
+lambda = 0.2;
 %depth of the IBVS
 depth = mean (P(1,:));
 
@@ -43,7 +44,7 @@ drawnow
 cam.T = Tc0;
 
 % Display points in 3D and the camera
-cam.plot_camera('Tcam',Tc0, 'label','scale',0.15);
+cam.plot_camera('Tcam',Tc0, 'label','scale',0.1);
 plot_sphere(P, 0.05, 'b')
 lighting gouraud
 light
@@ -120,7 +121,7 @@ ksteps = 0;
          end
 
         %Update joints 
-        q = (q0 + (1/fps)*qp);
+        q = (q0 + (1/fps)*qp)
         r.model.animate(q');
 
         %Get camera location
