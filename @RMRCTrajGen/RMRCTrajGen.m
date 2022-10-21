@@ -4,13 +4,12 @@ classdef RMRCTrajGen
         numJoints
         steps = 10; % default value
         
-        epsilon = 0.005;      % Threshold value for manipulability/Damped Least Squares
+        epsilon = 0.0001;      % Threshold value for manipulability/Damped Least Squares
         deltaT = 0.002;      % Control frequency
         W;
         m;
         qdot;
-    end
-    properties (Access = private)
+        toolOffset = [0 0 0];
     end
     methods (Access = public)
         function self = RMRCTrajGen(robot)
@@ -31,13 +30,26 @@ classdef RMRCTrajGen
             q = self.getRMRC(x, theta,self.steps);
         end
         function [x, q] = getQForTraj(self,traj)
+            count = 1;
             for i = 1:size(traj,2)
-                x(1:3,i) = traj(:,i)';
-                theta(1,i) = 0;                 % Roll angle 
-                theta(2,i) = 0;                 % Pitch angle
-                theta(3,i) = 0;                 % Yaw angle
+                if i < size(traj,2) && (norm(traj(1:3,i) - traj(1:3,i+1)) > 0.01)
+                    [x1, theta1] = self.lineTraj(traj(1:3,i),traj(1:3,i+1));
+                    for j = 1:size(x1,2)
+                        x(1:3,count) = x1(1:3,j);
+                        theta(1,count) = 0;                 % Roll angle 
+                        theta(2,count) = 0;                 % Pitch angle
+                        theta(3,count) = 0;                 % Yaw angle
+                        count = count +1;
+                    end
+                else
+                    x(1:3,count) = traj(:,i)';
+                    theta(1,count) = 0;                 % Roll angle 
+                    theta(2,count) = 0;                 % Pitch angle
+                    theta(3,count) = 0;                 % Yaw angle
+                    count = count +1;
+                end
             end
-            q = self.getRMRC(x,theta,size(traj,2));
+            q = self.getRMRC(x,theta,count-1);
         end
         function [x, q] = getQForZArcTraj(self, point)
             currentPoint = self.robot.fkine(self.robot.getpos());
@@ -60,7 +72,7 @@ classdef RMRCTrajGen
                 drawnow();
                 hold on
                 pos = self.robot.fkine(self.robot.getpos());
-                plot3(pos(1,4),pos(2,4),pos(3,4),'r.');
+                plot3(pos(1,4)+self.toolOffset(1),pos(2,4)+self.toolOffset(2),pos(3,4)+self.toolOffset(3),'r.');
                 pause(0.1);
             end 
         end
@@ -71,13 +83,13 @@ classdef RMRCTrajGen
                 drawnow();
                 hold on
                 pos = self.robot.fkine(self.robot.getpos());
-                plot3(pos(1,4),pos(2,4),pos(3,4),'r.');
-                plot3(x(1,j),x(2,j),x(3,j),'k.');
+                plot3(pos(1,4)+self.toolOffset(1),pos(2,4)+self.toolOffset(2),pos(3,4)+self.toolOffset(3),'r.');
+                plot3(x(1,4)+self.toolOffset(1),x(2,4)+self.toolOffset(2),x(3,4)+self.toolOffset(3),'k.');
                 pause(0.1);
             end 
         end
     end
-    methods (Access = public)
+    methods (Access = private)
         function [x, theta] = lineTraj(self,p1, p2)
             % TODO: preallocate x, theta array
             s = lspb(0,1,self.steps);                % Trapezoidal trajectory scalar

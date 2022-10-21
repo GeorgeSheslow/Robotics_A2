@@ -1,50 +1,60 @@
 classdef TextToTraj
     properties(Access =private)
-        text
-        image
-        type
+        word;
 
         x_scale = 1;
         downsample_factor = 3;
-        x_offset = -0.33;
-        y_offset = -0.5;
-        z_draw = 0.037;
-        z_move = 0.05; %%TODO: setter methods
-
         im_size = 500;
+        
+        % default offset values
+        x_offset = -0.27;
+        y_offset = -0.5;
+        z_draw = 0.065;
+        z_move = 0.08; 
+        
+        trajectory;
     end
     methods (Access =public)
-        function self = TextToTraj(data,type)
-            self.type = type;
-            if type == "text"
-                self.text = data;
-            elseif type == "image"
-                self.image = data;
-            else % not valid option, call destructor
-                disp('Data type not valid')
+        function self = TextToTraj(word) % input word to draw and x,y,z offsets
+            self.word = word;
+        end
+        function setTextOffsets(self,offsets)
+            disp("adding text offsets")
+            self.x_offset = offsets(1);
+            self.y_offset = offsets(2);
+            self.z_draw = offsets(3);
+            self.z_move = self.z_draw + 0.1;
+        end
+        function traj = GetTraj(self)
+            self.trajectory = self.CalculateTraj();
+            traj = self.trajectory;
+        end
+        function PlotTraj(self)
+            plotData = self.trajectory;
+            for i = 1:size(plotData,2)
+                plot3(plotData(1,i),plotData(2,i),plotData(3,i),'k.');
+                hold on;
             end
         end
-
-        function trajectory = GetTraj(self)
-            image = 255 * ones(500,500,'uint8');
+        function [z] = getDrawingHeight(self)
+            z = self.z_draw;
+        end
+    end
+     methods (Access =private)
+        function trajectory = CalculateTraj(self)
+            % select font based off OS
             if ismac
-                % Code to run on Mac platform
-                selectedFont = 'SFNSRounded';
-            elseif isunix
-                % Code to run on Linux platform
-                selectedFont = 'AbyssinicaSIL-Regular';
+                font = 'SFNSRounded';
             elseif ispc
-                % Code to run on Windows platform
-                selectedFont = 'Arial';
+                font = "Ariel";
+            elseif isunix
+                font = 'SFNSRounded';
             else
-                disp('Platform not supported')
+                disp("Font not selected, for text")
             end
-                
-            image = insertText(image,[250,250],'DOBOT','AnchorPoint','Center','Font',selectedFont,'FontSize',35,'BoxColor','white');
+            image = 255 * ones(500,500,'uint8');
+            image = insertText(image,[250,250],self.word,'AnchorPoint','Center','Font',font,'FontSize',35,'BoxColor','white');
 
-%             if self.type == "text"
-%                 self.image = 255 * ones(500,500,'uint8');
-%             end
             img = TextToTraj.skeletonize(image);
             img = imrotate(img,90);
             % imshow(img)
@@ -58,10 +68,7 @@ classdef TextToTraj
                 y_interp = TextToTraj.downsampleInterp(coord_paths{i}(2,:),self.downsample_factor);
                 coord_paths{i} = [x_interp ; y_interp];
             end
-            
-            % need to get trajectory inbetween letters to pickup and
-            % putdown points
-            
+
             trajectory = TextToTraj.stitchPath(coord_paths,self.x_offset,self.y_offset,self.z_move,self.z_draw);
         end
 
