@@ -8,8 +8,8 @@ classdef TextToTraj
         downsample_factor = 3;
         x_offset = -0.33;
         y_offset = -0.5;
-        z_draw = 0.05;
-        z_move = 0.06; %%TODO: setter methods
+        z_draw = 0.037;
+        z_move = 0.05; %%TODO: setter methods
 
         im_size = 500;
     end
@@ -26,34 +26,60 @@ classdef TextToTraj
         end
 
         function trajectory = GetTraj(self)
-            if self.type == "text"
-                self.image = 255 * ones(500,500,'uint8');
-                self.image = insertText(self.image,[250,250],'Dobot','AnchorPoint','Center','Font','AbyssinicaSIL-Regular','FontSize',30,'BoxColor','white');
+            image = 255 * ones(500,500,'uint8');
+            if ismac
+                % Code to run on Mac platform
+                selectedFont = 'SFNSRounded';
+            elseif isunix
+                % Code to run on Linux platform
+                selectedFont = 'AbyssinicaSIL-Regular';
+            elseif ispc
+                % Code to run on Windows platform
+                selectedFont = 'Arial';
+            else
+                disp('Platform not supported')
             end
-            img = skeletonize(self.image);
+                
+            image = insertText(image,[250,250],'DOBOT','AnchorPoint','Center','Font',selectedFont,'FontSize',35,'BoxColor','white');
+
+%             if self.type == "text"
+%                 self.image = 255 * ones(500,500,'uint8');
+%             end
+            img = TextToTraj.skeletonize(image);
             img = imrotate(img,90);
             % imshow(img)
-            grid_paths = pathsOnGrid(img);
-            grid_paths = trimPath(grid_paths,2); %grid_paths trimmed with min path size
+            grid_paths = TextToTraj.pathsOnGrid(img);
+            grid_paths = TextToTraj.trimPath(grid_paths,2); %grid_paths trimmed with min path size
             
-            coord_paths = toCoordinates(grid_paths,img,self.x_scale);
+            coord_paths = TextToTraj.toCoordinates(grid_paths,img,self.x_scale);
             
             for i = 1:size(coord_paths,2) 
-                x_interp = downsampleInterp(coord_paths{i}(1,:),self.downsample_factor);
-                y_interp = downsampleInterp(coord_paths{i}(2,:),self.downsample_factor);
+                x_interp = TextToTraj.downsampleInterp(coord_paths{i}(1,:),self.downsample_factor);
+                y_interp = TextToTraj.downsampleInterp(coord_paths{i}(2,:),self.downsample_factor);
                 coord_paths{i} = [x_interp ; y_interp];
             end
             
-            % TODO make trajectory paths more efficient in stitchPath function
+            % need to get trajectory inbetween letters to pickup and
+            % putdown points
             
-            trajectory = stitchPath(coord_paths,self.x_offset,self.y_offset,self.z_move,self.z_draw);
+            trajectory = TextToTraj.stitchPath(coord_paths,self.x_offset,self.y_offset,self.z_move,self.z_draw);
         end
 
     end
-    methods(Access=private)
-    end
+
 %% Helper functions
     methods(Static)
+        function r = binaryEmpty(img)
+            r = 1;
+            for i = 1:size(img,1)
+                for j = 1:size(img,2)
+                    if img(i,j) == 1
+                        r = 0;
+                        return
+                    end
+                end
+            end
+        end
         function image_skel = skeletonize(image_src)
             imageBW = im2bw(image_src); 
             image_skel = bwskel(imcomplement(imageBW)); 
@@ -142,31 +168,31 @@ classdef TextToTraj
             
             paths = {};
             
-            while ~binaryEmpty(temp_img)
+            while ~TextToTraj.binaryEmpty(temp_img)
                 
-                [start_row, start_col] = findStart(temp_img);
+                [start_row, start_col] = TextToTraj.findStart(temp_img);
                 new_path = [start_row ; start_col];
                 temp_img(start_row,start_col) = 0;
                 
                 % assumes that all pixels of interest are sufficently far from the
                 % edge of the image
                 
-                num_neighbours = hasNeighbours(new_path(1,end), new_path(2,end), temp_img);
+                num_neighbours = TextToTraj.hasNeighbours(new_path(1,end), new_path(2,end), temp_img);
                 
                 while num_neighbours ~= 0
                     % if only has a single neighbour
                     if num_neighbours == 1
-                        new_point = findSingleNeighbour(new_path(1,end), new_path(2,end), temp_img);
+                        new_point = TextToTraj.findSingleNeighbour(new_path(1,end), new_path(2,end), temp_img);
                         new_path = [new_path new_point];
-                        num_neighbours = hasNeighbours(new_path(1,end), new_path(2,end), temp_img);
+                        num_neighbours = TextToTraj.hasNeighbours(new_path(1,end), new_path(2,end), temp_img);
                         temp_img(new_point(1),new_point(2)) = 0;
                         
                     else
                         %if multiple neighbours then right now just pick random
                         %neighbour
-                        new_point = findRandomNeighbour(new_path(1,end), new_path(2,end), temp_img);
+                        new_point = TextToTraj.findRandomNeighbour(new_path(1,end), new_path(2,end), temp_img);
                         new_path = [new_path new_point];
-                        num_neighbours = hasNeighbours(new_path(1,end), new_path(2,end), temp_img);
+                        num_neighbours = TextToTraj.hasNeighbours(new_path(1,end), new_path(2,end), temp_img);
                         temp_img(new_point(1),new_point(2)) = 0;
                     end
                 end
