@@ -10,6 +10,7 @@ classdef IRB120 < handle
             self.model.base = base;
             self.PlotAndColourRobot();
             self.trajGen = RMRCTrajGen(self.model);
+            self.trajGen.toolOffset = self.toolOffset;
         end
         %% GetIRB120
         % Create and return an IRB120 robot model
