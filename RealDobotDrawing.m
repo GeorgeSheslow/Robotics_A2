@@ -80,7 +80,7 @@ currentEndEffectorQuat = [currentEndEffectorPoseMsg.Pose.Orientation.W,
 
 %%
 
-function sendIt(position)
+function sendEECommands(position)
     endEffectorPosition = position;
     endEffectorRotation = [0,0,0];
     
@@ -100,7 +100,7 @@ function sendIt(position)
 end
 
 %%
-function sendJoints(targetJointStates)
+function sendJointCommands(targetJointStates)
     
     jointTarget = targetJointStates; % Remember that the Dobot has 4 joints by default.
     
