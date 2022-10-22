@@ -66,7 +66,9 @@ classdef GUI < matlab.apps.AppBase & handle
         intputTextPos = [950 645];
         titlePos = [900 700];
         
-        
+        safety = struct;
+        dobotText;
+
     end
     methods 
         function self = GUI()
@@ -76,16 +78,30 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupSim();
             self.setupCommandButtons();
             self.setupJogButtons();
+            
+            self.safety.guiEStop = 0; % GUI button state
+            self.safety.hardwareEStop = 0; % Arduino Estop button
+            self.safety.hardwareIR = 0; % Arduino IR Sensor
+            self.safety.StopState = 0; % Emergency Stop State
+            self.safety.SafetyState = 0; % User and second motion for Estop State, stop and be able to resume simulation
+
+        end
+        function updateSafetyVars(self, estop, ir_safety, ir_data)
+            disp(estop)
+            disp(ir_safety)
+            disp(ir_data)
+            self.safety.hardwareEStop = estop;
+            self.safety.hardwareIR = ir_safety; 
         end
         function setupSim(self)
             % Load Sim Environment
-            self.environment = Environment();
+%             self.environment = Environment("Simple");
             
             % Load the 2 Robot
-            self.dobotRobot = DobotMagician(transl(-0.7,0,0.72)); %table height: 0.72
+%             self.dobotRobot = DobotMagician(transl(-0.7,0,0.72)); %table height: 0.72
 %             self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
             
-            self.IRBRobot = IRB120(transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg'));
+%             self.IRBRobot = IRB120(transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg'));
 %             self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
         end
         function setupCommandButtons(self)
@@ -116,12 +132,23 @@ classdef GUI < matlab.apps.AppBase & handle
             self.estopButton.Callback = @self.onEstopButton;
         end
         function previewText(self, event, app)
-            disp('Text trajectory preview');
+            figure(2)
+            if strlength(self.dobotText) > 0
+                write = TextToTraj(self.dobotText,"text");
+            else
+                write = TextToTraj("Dobot","text");
+            end
+            drawPoints = write.GetTraj();
+            for i = 1:size(drawPoints,2)
+                plot3(drawPoints(1,i),drawPoints(2,i),drawPoints(3,i),'k.');
+                hold on
+            end
+            axis padded;
+             self.simStatus.String = "Preview Text";
         end
         function setInputText(self, event, app)
-            disp('User entered: ');
-            disp(event.String);
-            % TODO generate text trajectory for dobot 
+            self.dobotText = event.String;
+            self.simStatus.String = "Text Added";
         end
         function startSim(self, event, app)
             % TODO: Add checker, that word has been entered by user
@@ -287,3 +314,4 @@ classdef GUI < matlab.apps.AppBase & handle
 %             robot.trajGen.animateQ(qMatrix)
         end
     end
+end
