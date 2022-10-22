@@ -134,9 +134,9 @@ classdef GUI < matlab.apps.AppBase & handle
         function previewText(self, event, app)
             figure(2)
             if strlength(self.dobotText) > 0
-                write = TextToTraj(self.dobotText,"text");
+                write = TextToTraj(self.dobotText);
             else
-                write = TextToTraj("Dobot","text");
+                write = TextToTraj("Dobot");
             end
             drawPoints = write.GetTraj();
             for i = 1:size(drawPoints,2)
