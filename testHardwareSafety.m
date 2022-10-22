@@ -1,7 +1,11 @@
+%% Check arduino serial port
+
+serialportlist("available")'
+%%
 close all
 clear
 clc
 
-%     serialportlist("available")'
 gui = GUI();
-HardwareSafety("/dev/cu.usbmodem1431401",gui);
+HardwareSafety("/dev/tty.usbserial-143140",gui);
+

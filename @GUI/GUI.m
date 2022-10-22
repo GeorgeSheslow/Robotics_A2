@@ -85,10 +85,12 @@ classdef GUI < matlab.apps.AppBase & handle
             self.safety.SafetyState = 0; % User and second motion for Estop State, stop and be able to resume simulation
 
         end
-        function updateSafetyVars(self, estop, ir)
-            disp("working");
-            disp(estop);
-            disp(ir);
+        function updateSafetyVars(self, estop, ir_safety, ir_data)
+            disp(estop)
+            disp(ir_safety)
+            disp(ir_data)
+            self.safety.hardwareEStop = estop;
+            self.safety.hardwareIR = ir_safety; 
         end
         function setupSim(self)
             % Load Sim Environment
