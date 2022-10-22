@@ -27,9 +27,9 @@ classdef RMRCTrajGen
         function [x, q] = getQForLineTraj(self, point)
             currentPoint = self.robot.fkine(self.robot.getpos());
             [x, theta] = self.lineTraj(currentPoint(1:3,4)',point(1:3,4)');
-            q = self.getRMRC(x, theta,self.steps);
+            q = self.getRMRC(x, theta, self.steps);
         end
-       function [x, q] = getQForLineTrajWSteps(self, point, steps)
+        function [x, q] = getQForLineTrajWSteps(self, point, steps)
             currentPoint = self.robot.fkine(self.robot.getpos());
             [x, theta] = self.lineTraj(currentPoint(1:3,4)',point(1:3,4)');
             q = self.getRMRC(x, theta,steps);
@@ -65,6 +65,19 @@ classdef RMRCTrajGen
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
                 self.robot.animate(newQ);
+                drawnow();
+                hold on
+                pause(0.1);
+            end 
+        end
+        function animateQWObj(self, qMatrix, object)
+            for j = 1:size(qMatrix,1)
+                newQ = qMatrix(j,:);
+                self.robot.animate(newQ);
+                % move EE with object attached to it 
+                pose  = self.robot.fkine(self.robot.getpos());
+                pose = pose * transl(self.toolOffset);
+                object.MoveObj(pose);
                 drawnow();
                 hold on
                 pause(0.1);

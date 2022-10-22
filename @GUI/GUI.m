@@ -1,6 +1,6 @@
 classdef GUI < matlab.apps.AppBase & handle
     
-    properties(Access = private)
+    properties(Access = public)
         fig;
         simPlot_h;
         
@@ -66,9 +66,11 @@ classdef GUI < matlab.apps.AppBase & handle
         intputTextPos = [950 645];
         titlePos = [900 700];
         
-        safety = struct;
-        dobotText;
+        safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
+        safetyLEDS;
 
+        dobotText = "DOBOT"; % default text
+        paper;
     end
     methods 
         function self = GUI()
@@ -78,31 +80,57 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupSim();
             self.setupCommandButtons();
             self.setupJogButtons();
-            
-            self.safety.guiEStop = 0; % GUI button state
-            self.safety.hardwareEStop = 0; % Arduino Estop button
-            self.safety.hardwareIR = 0; % Arduino IR Sensor
-            self.safety.StopState = 0; % Emergency Stop State
-            self.safety.SafetyState = 0; % User and second motion for Estop State, stop and be able to resume simulation
-
+            self.setupSafetyLEDS();
+        end
+        function IRBPickAndPlace(self,ver)
+            waitpoint = [-0.3,0,0.6];
+            paperoffset = transl(0,0,0.19);
+            if ver == 1
+                self.paper.MoveObj(self.environment.trayOnePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
+                [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayOnePos * paperoffset);
+                self.IRBRobot.trajGen.animateQ(traj)
+                [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayThreePos * paperoffset);
+                self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
+                self.paper.MoveObj(self.environment.trayThreePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
+                [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
+                self.IRBRobot.trajGen.animateQ(traj)
+            elseif ver == 2
+                [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayThreePos * paperoffset);
+                self.IRBRobot.trajGen.animateQ(traj)
+                [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayTwoPos * paperoffset);
+                self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
+                self.paper.MoveObj(self.environment.trayTwoPos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
+                [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
+                self.IRBRobot.trajGen.animateQ(traj)
+            end
         end
         function updateSafetyVars(self, estop, ir_safety, ir_data)
-            disp(estop)
-            disp(ir_safety)
-            disp(ir_data)
-            self.safety.hardwareEStop = estop;
-            self.safety.hardwareIR = ir_safety; 
+            self.safety.hardwareEstop = estop;
+            self.safety.hardwareIR = ir_safety;
+            if self.safety.hardwareEstop == 1
+                self.safetyLEDS{4}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{4}.BackgroundColor = 'Green';
+            end
+            if self.safety.hardwareIR == 1
+                self.safetyLEDS{5}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{5}.BackgroundColor = 'Green';
+            end
+%             disp(estop);
+%             disp(ir_safety);
+%             disp(ir_data);
         end
         function setupSim(self)
             % Load Sim Environment
-%             self.environment = Environment("Simple");
+            self.environment = Environment("Simple");
             
             % Load the 2 Robot
-%             self.dobotRobot = DobotMagician(transl(-0.7,0,0.72)); %table height: 0.72
-%             self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
+            self.dobotRobot = DobotMagician(transl(-0.6,0,0.72)); %table height: 0.72        
+            self.IRBRobot = IRB120(transl(0.2,0,0.72));
             
-%             self.IRBRobot = IRB120(transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg'));
-%             self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
+            % Add Paper model
+            self.paper = Paper(self.environment.trayOnePos * transl(0,0,0.03));
         end
         function setupCommandButtons(self)
             % GUI Title
@@ -152,18 +180,91 @@ classdef GUI < matlab.apps.AppBase & handle
             self.simStatus.String = "Text Added";
         end
         function startSim(self, event, app)
-            % TODO: Add checker, that word has been entered by user
+            
             disp('Starting Simulation');
-            % TODO make button disbaled, during simulation, or change to a
-            % continue button
+            self.paper.clearText();
+            self.simStatus.String = "IRB Pick/Place";
+            self.IRBPickAndPlace(1);
+            % TODO make button disbaled
+            self.simStatus.String = "Dobot RMRC Calcs";
+            write = TextToTraj(self.dobotText);
+            write.addBaseOffsets(self.dobotRobot.model.base(1:3,4));
+            xWrite = write.GetTraj();
+            [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
+            self.simStatus.String = "Dobot Drawing";
+            self.dobotRobot.trajGen.animateQ(qMatrix) % Animate
+            [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
+            self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
+            [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.17,0,0.157) * self.dobotRobot.model.base); % Move EE to neutal pose
+            self.dobotRobot.trajGen.animateQ(qMatrix)
+            self.simStatus.String = "IRB Pick/Place";
+            self.IRBPickAndPlace(2);
+            self.simStatus.String = "Sim Finished";
+        end
+        function drawText(self,robot,paperHeight,x, qMatrix, desiredTrajOn)
+            for j = 1:size(qMatrix,1)
+                newQ = qMatrix(j,:);
+                robot.model.animate(newQ);
+                drawnow();
+                hold on
+                pos = robot.model.fkine(robot.model.getpos());
+                if pos(3,4) <= paperHeight + 0.005
+%                     plot3(pos(1,4)+robot.toolOffset(1),pos(2,4)+robot.toolOffset(2),pos(3,4)+robot.toolOffset(3),'r.');
+                    point = [pos(1,4)+robot.toolOffset(1),pos(2,4)+robot.toolOffset(2),pos(3,4)+robot.toolOffset(3)];
+                    self.paper.addText(point);
+                    if desiredTrajOn
+                        plot3(x(1,4)+robot.toolOffset(1),x(2,4)+robot.toolOffset(2),x(3,4)+robot.toolOffset(3),'k.');
+                    end
+                end
+                pause(0.1);
+            end 
         end
         function stopSim(self, event, app)
             disp('Pausing Simulation');
         end
         function onEstopButton(self, event, app)
-            self.estopOn = true;
-            self.estopLock = true;
-            self.estopButton.BackgroundColor = 'red';
+            self.safety.guiEstop = xor(self.safety.guiEstop,1);
+            self.safety.guiEstop
+            if self.safety.guiEstop == 1
+                self.safetyLEDS{3}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{3}.BackgroundColor = 'Green';
+            end
+        end
+        function setupSafetyLEDS(self)
+%             ("emergencyStopState",0,"SafetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
+            self.safetyLEDS{1} = uicontrol('Style','text','String',"emergencyStopState",'FontSize',14,'position',[1470 730 140 25],'BackgroundColor','Green');
+            self.safetyLEDS{2} = uicontrol('Style','text','String',"safetyStopState",'FontSize',14,'position',[1480 690 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{3} = uicontrol('Style','text','String',"GUI ESTOP",'FontSize',14,'position',[1480 620 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{4} = uicontrol('Style','text','String',"HW ESTOP",'FontSize',14,'position',[1480 580 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{5} = uicontrol('Style','text','String',"HW IR",'FontSize',14,'position',[1480 540 120 25],'BackgroundColor','Green');
+        end
+        function updateSafetyLEDs(self)
+            if self.safety.emergencyStopState == 1
+                self.safetyLEDS{1}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{1}.BackgroundColor = 'Green';
+            end
+            if self.safety.safetyStopState == 1
+                self.safetyLEDS{2}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{2}.BackgroundColor = 'Green';
+            end
+            if self.safety.guiEstop == 1
+                self.safetyLEDS{3}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{3}.BackgroundColor = 'Green';
+            end
+            if self.safety.hardwareEstop == 1
+                self.safetyLEDS{4}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{4}.BackgroundColor = 'Green';
+            end
+            if self.safety.hardwareIR == 1
+                self.safetyLEDS{5}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{5}.BackgroundColor = 'Green';
+            end
         end
         function setupJogButtons(self)
             

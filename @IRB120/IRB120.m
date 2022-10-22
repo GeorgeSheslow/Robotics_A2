@@ -3,6 +3,8 @@ classdef IRB120 < handle
         model;
         workspace = [-1 1 -1 1 -0.2 1.1];
         trajGen;
+        toolOffset = [0 0 -0.16];
+
     end
     methods
         function self = IRB120(base)
@@ -11,6 +13,8 @@ classdef IRB120 < handle
             self.PlotAndColourRobot();
             self.trajGen = RMRCTrajGen(self.model);
             self.trajGen.toolOffset = self.toolOffset;
+            self.trajGen.steps = 25;
+            self.trajGen.epsilon = 0.035;
         end
         %% GetIRB120
         % Create and return an IRB120 robot model
@@ -19,7 +23,7 @@ classdef IRB120 < handle
             L(2) = Link('d',0,'a',0.27,'alpha',0,'qlim', deg2rad([-110 110]), 'offset',-pi/2);
             L(3) = Link('d',0,'a',0.07,'alpha',-pi/2,'qlim', deg2rad([-220 70]), 'offset', 0);
             L(4) = Link('d',0.302,'a',0,'alpha',-pi/2,'qlim',deg2rad([-360 360]),'offset', 0);
-            L(5) = Link('d',0,'a',0,'alpha',-pi/2,'qlim',deg2rad([-100,100]), 'offset',0);
+            L(5) = Link('d',0,'a',0,'alpha',-pi/2,'qlim',deg2rad([-100,100]), 'offset',-pi/2);
             L(6) = Link('d',-0.072,'a',0,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
 
             self.model = SerialLink(L,'name','IRB120');

@@ -15,21 +15,23 @@ dobot.trajGen.plotQAndTraj(qMatrix, x)
 [x, qMatrix] = dobot.trajGen.getQForLineTraj(transl(0.3,0,0.25));
 dobot.trajGen.animateQ(qMatrix)
 
-%% Dobot Drawing
+%% Dobot Drawing at Z 1m
 clear all
 close all
 clc
 
-dobot = DobotMagician(transl(0,0,0));
+dobot = DobotMagician(transl(0,0,1));
 axis equal;
-
-write = TextToTraj("DOBOT"); % create instance of TextToTraj class
-x_Write = write.GetTraj(); % Get points for text
+hold on;
+write = TextToTraj("I"); % create instance of TextToTraj class
+write.addBaseOffsets(dobot.model.base(1:3,4));
+x_Write = write.GetTraj()
+% write.PlotTraj();
 [x, qMatrix] = dobot.trajGen.getQForLineTraj(transl(x_Write(:,1))); % Use RMRC line traj to get to paper level
 dobot.trajGen.animateQ(qMatrix) % Animate
 [x, qMatrix] = dobot.trajGen.getQForTraj(x_Write); % Use RMRC to write text
-drawText(dobot,write.getDrawingHeight(),x, qMatrix,1); % animate
-[x, qMatrix] = dobot.trajGen.getQForLineTraj(transl(0.3,0,0.25)); % Move EE to neutal pose
+drawText(dobot,write.getDrawingHeight(),x, qMatrix,0); % animate
+[x, qMatrix] = dobot.trajGen.getQForLineTraj(transl(0.3,0,0.25) * dobot.model.base); % Move EE to neutral pose
 dobot.trajGen.animateQ(qMatrix)
 %% IRB RMRC
 clear all
