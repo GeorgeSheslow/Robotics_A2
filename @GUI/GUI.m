@@ -186,15 +186,18 @@ classdef GUI < matlab.apps.AppBase & handle
         function startSim(self, event, app)
             
             disp('Starting Simulation');
+            self.paper.clearText();
             self.IRBPickAndPlace(1);
             % TODO make button disbaled
+            
             write = TextToTraj(self.dobotText);
             write.addBaseOffsets(self.dobotRobot.model.base(1:3,4));
             xWrite = write.GetTraj();
             [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
             self.dobotRobot.trajGen.animateQ(qMatrix) % Animate
             [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
-            self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,1); % animate
+            self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
+            self.paper.clearText();
             [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.3,0,0.25) * self.dobotRobot.model.base); % Move EE to neutal pose
             self.dobotRobot.trajGen.animateQ(qMatrix)
 
@@ -208,7 +211,9 @@ classdef GUI < matlab.apps.AppBase & handle
                 hold on
                 pos = robot.model.fkine(robot.model.getpos());
                 if pos(3,4) <= paperHeight + 0.005
-                    plot3(pos(1,4)+robot.toolOffset(1),pos(2,4)+robot.toolOffset(2),pos(3,4)+robot.toolOffset(3),'r.');
+%                     plot3(pos(1,4)+robot.toolOffset(1),pos(2,4)+robot.toolOffset(2),pos(3,4)+robot.toolOffset(3),'r.');
+                    point = [pos(1,4)+robot.toolOffset(1),pos(2,4)+robot.toolOffset(2),pos(3,4)+robot.toolOffset(3)];
+                    self.paper.addText(point);
                     if desiredTrajOn
                         plot3(x(1,4)+robot.toolOffset(1),x(2,4)+robot.toolOffset(2),x(3,4)+robot.toolOffset(3),'k.');
                     end
