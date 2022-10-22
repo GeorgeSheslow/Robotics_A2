@@ -140,9 +140,10 @@ classdef GUI < matlab.apps.AppBase & handle
             end
             drawPoints = write.GetTraj();
             for i = 1:size(drawPoints,2)
-                plot3(drawPoints(1,i),drawPoints(2,i),drawPoints(3,i),'k.');
+                plot(drawPoints(2,i),drawPoints(1,i),'k.');
                 hold on
             end
+            set(gca,'ydir','reverse')
             axis padded;
              self.simStatus.String = "Preview Text";
         end
