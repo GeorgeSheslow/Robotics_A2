@@ -66,7 +66,8 @@ classdef GUI < matlab.apps.AppBase & handle
         intputTextPos = [950 645];
         titlePos = [900 700];
         
-        
+        safety = struct;
+
     end
     methods 
         function self = GUI()
@@ -76,16 +77,28 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupSim();
             self.setupCommandButtons();
             self.setupJogButtons();
+            
+            self.safety.guiEStop = 0; % GUI button state
+            self.safety.hardwareEStop = 0; % Arduino Estop button
+            self.safety.hardwareIR = 0; % Arduino IR Sensor
+            self.safety.StopState = 0; % Emergency Stop State
+            self.safety.SafetyState = 0; % User and second motion for Estop State, stop and be able to resume simulation
+
+        end
+        function updateSafetyVars(self, estop, ir)
+            disp("working");
+            disp(estop);
+            disp(ir);
         end
         function setupSim(self)
             % Load Sim Environment
-            self.environment = Environment();
+%             self.environment = Environment("Simple");
             
             % Load the 2 Robot
-            self.dobotRobot = DobotMagician(transl(-0.7,0,0.72)); %table height: 0.72
+%             self.dobotRobot = DobotMagician(transl(-0.7,0,0.72)); %table height: 0.72
 %             self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
             
-            self.IRBRobot = IRB120(transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg'));
+%             self.IRBRobot = IRB120(transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg'));
 %             self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
         end
         function setupCommandButtons(self)
@@ -287,3 +300,4 @@ classdef GUI < matlab.apps.AppBase & handle
 %             robot.trajGen.animateQ(qMatrix)
         end
     end
+end
