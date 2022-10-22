@@ -1,5 +1,5 @@
-classdef TextToTraj
-    properties(Access =private)
+classdef TextToTraj < handle
+    properties(Access =public)
         word;
 
         x_scale = 1;
@@ -9,31 +9,37 @@ classdef TextToTraj
         % default offset values
         x_offset = -0.27;
         y_offset = -0.5;
-        z_draw = 0.065;
-        z_move = 0.08; 
+        z_draw = 0.04;
+        z_move = 0.06; 
         
         trajectory;
     end
     methods (Access =public)
-        function self = TextToTraj(word) % input word to draw and x,y,z offsets
+        function [self] = TextToTraj(word) % input word to draw and x,y,z offsets
             self.word = word;
         end
         function setTextOffsets(self,offsets)
             disp("adding text offsets")
-            self.x_offset = offsets(1);
+            self.x_offset = offset(1);
             self.y_offset = offsets(2);
             self.z_draw = offsets(3);
             self.z_move = self.z_draw + 0.1;
         end
+        function addBaseOffsets(self,offsets)
+            self.x_offset = self.x_offset + offsets(1);
+            self.y_offset = self.y_offset + offsets(2);
+            self.z_draw = self.z_draw + offsets(3);
+            self.z_move = self.z_draw + 0.05;
+        end
         function traj = GetTraj(self)
-            self.trajectory = self.CalculateTraj();
-            traj = self.trajectory;
+            traj = self.CalculateTraj();
+            self.trajectory = traj;
         end
         function PlotTraj(self)
             plotData = self.trajectory;
             for i = 1:size(plotData,2)
                 plot3(plotData(1,i),plotData(2,i),plotData(3,i),'k.');
-                hold on;
+                hold on
             end
         end
         function [z] = getDrawingHeight(self)

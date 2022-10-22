@@ -68,7 +68,7 @@ classdef GUI < matlab.apps.AppBase & handle
         
         safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
         safetyLEDS;
-        dobotText;
+        dobotText = "DOBOT"; % default text
         paper;
     end
     methods 
@@ -125,10 +125,10 @@ classdef GUI < matlab.apps.AppBase & handle
             self.environment = Environment("Simple");
             
             % Load the 2 Robot
-%             self.dobotRobot = DobotMagician(transl(-0.7,0,0.72)); %table height: 0.72
+            self.dobotRobot = DobotMagician(transl(-0.62,0,0.72)); %table height: 0.72
 %             self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
             
-            self.IRBRobot = IRB120(transl(0.2,0,0.72));
+%             self.IRBRobot = IRB120(transl(0.2,0,0.72));
 
 %             self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
             
@@ -183,12 +183,15 @@ classdef GUI < matlab.apps.AppBase & handle
             self.simStatus.String = "Text Added";
         end
         function startSim(self, event, app)
-            % TODO: Add checker, that word has been entered by user
+            
             disp('Starting Simulation');
-            % TODO make button disbaled, during simulation, or change to a
-            % continue button
-            self.IRBPickAndPlace(1);
-            self.IRBPickAndPlace(2);
+            % TODO make button disbaled
+            write = TextToTraj(self.dobotText);
+            write.addBaseOffsets(self.dobotRobot.model.base(1:3,4));
+            xWrite = write.GetTraj();
+            write.PlotTraj();
+%             self.IRBPickAndPlace(1);
+%             self.IRBPickAndPlace(2);
         end
         function stopSim(self, event, app)
             disp('Pausing Simulation');

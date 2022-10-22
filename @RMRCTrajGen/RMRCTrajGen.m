@@ -1,4 +1,4 @@
-classdef RMRCTrajGen
+classdef RMRCTrajGen < handle
     properties (Access = public)
         robot
         numJoints

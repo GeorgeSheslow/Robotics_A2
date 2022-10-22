@@ -1,4 +1,4 @@
-classdef Environment
+classdef Environment < handle
     properties(Access = private)
         table
         tray

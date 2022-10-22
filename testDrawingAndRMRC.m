@@ -20,10 +20,14 @@ clear all
 close all
 clc
 
-dobot = DobotMagician(transl(0,0,0));
+dobot = DobotMagician(transl(0,0,1));
 axis equal;
-
+hold on;
 write = TextToTraj("DOBOT"); % create instance of TextToTraj class
+write.addBaseOffsets(dobot.model.base(1:3,4));
+x_Write = write.GetTraj()
+write.PlotTraj();
+%%
 x_Write = write.GetTraj(); % Get points for text
 [x, qMatrix] = dobot.trajGen.getQForLineTraj(transl(x_Write(:,1))); % Use RMRC line traj to get to paper level
 dobot.trajGen.animateQ(qMatrix) % Animate
