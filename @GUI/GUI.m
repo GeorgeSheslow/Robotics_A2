@@ -68,8 +68,13 @@ classdef GUI < matlab.apps.AppBase & handle
         
         safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
         safetyLEDS;
+<<<<<<< HEAD
         dobotText = "DOBOT"; % default text
         paper;
+=======
+        dobotText;
+
+>>>>>>> c4a5b8457819e5fd081baadf04f00b9341637daf
     end
     methods 
         function self = GUI()
@@ -80,6 +85,7 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupCommandButtons();
             self.setupJogButtons();
             self.setupSafetyLEDS();
+<<<<<<< HEAD
         end
         function IRBPickAndPlace(self,ver)
             waitpoint = [-0.3,0,0.6];
@@ -102,6 +108,8 @@ classdef GUI < matlab.apps.AppBase & handle
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
                 self.IRBRobot.trajGen.animateQ(traj)
             end
+=======
+>>>>>>> c4a5b8457819e5fd081baadf04f00b9341637daf
         end
         function updateSafetyVars(self, estop, ir_safety, ir_data)
             self.safety.hardwareEstop = estop;
