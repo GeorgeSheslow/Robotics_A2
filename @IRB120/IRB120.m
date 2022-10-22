@@ -3,6 +3,7 @@ classdef IRB120 < handle
         model;
         workspace = [-1 1 -1 1 -0.2 1.1];
         trajGen;
+        toolOffset = [0 0 -0.05];
     end
     methods
         function self = IRB120(base)
