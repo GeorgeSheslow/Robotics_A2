@@ -9,7 +9,7 @@ classdef TextToTraj < handle
         % default offset values
         x_offset = -0.27;
         y_offset = -0.5;
-        z_draw = 0.04;
+        z_draw = 0.075;
         z_move = 0.06; 
         
         trajectory;

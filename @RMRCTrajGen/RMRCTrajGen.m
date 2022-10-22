@@ -1,4 +1,4 @@
-classdef RMRCTrajGen < handle
+classdef RMRCTrajGen
     properties (Access = public)
         robot
         numJoints
@@ -27,9 +27,9 @@ classdef RMRCTrajGen < handle
         function [x, q] = getQForLineTraj(self, point)
             currentPoint = self.robot.fkine(self.robot.getpos());
             [x, theta] = self.lineTraj(currentPoint(1:3,4)',point(1:3,4)');
-            q = self.getRMRC(x, theta,self.steps);
+            q = self.getRMRC(x, theta, self.steps);
         end
-       function [x, q] = getQForLineTrajWSteps(self, point, steps)
+        function [x, q] = getQForLineTrajWSteps(self, point, steps)
             currentPoint = self.robot.fkine(self.robot.getpos());
             [x, theta] = self.lineTraj(currentPoint(1:3,4)',point(1:3,4)');
             q = self.getRMRC(x, theta,steps);
@@ -58,7 +58,6 @@ classdef RMRCTrajGen < handle
         end
         function [x, q] = getQForZArcTraj(self, point)
             currentPoint = self.robot.fkine(self.robot.getpos());
-            RPY = tr2rpy(currentPoint);
             [x, theta] = self.zArcTraj(currentPoint(1:3,4)',point(1:3,4)');
             q = self.getRMRC(x,theta,self.steps);
         end
@@ -129,20 +128,15 @@ classdef RMRCTrajGen < handle
                 x(2,i) = (1-s(i))*p1(2) + s(i)*p2(2); % Points in y
                 r = pdist([p1; p2]) / 2;
                 x(3,i) = p1(3) + r * sin(i * dis); % Points in z
-                theta(1,i) = 0;                               % Roll angle 
-                theta(2,i) = 0;                               % Pitch angle
-                theta(3,i) = 0;                               % Yaw angle
+                theta(1,i) = 0;                 % Roll angle 
+                theta(2,i) = 0;                 % Pitch angle
+                theta(3,i) = 0;                 % Yaw angle
             end
         end
         function qMatrix = getRMRC(self, x, theta, steps)
             self.m = zeros(steps,1);             % Array for Measure of Manipulability
             self.qdot = zeros(steps,self.numJoints);          % Array for joint velocities
-            if self.numJoints == 4
-                rotation = rpy2r(0,theta(2,1),0);                    
-            elseif self.numJoints == 6
-                rotation = rpy2r(theta(1,1),theta(2,1),theta(3,1));                    
-            end
-            T = [rotation x(:,1);zeros(1,3) 1];          % Create transformation of first point and angle
+            T = [rpy2r(0,0,0) x(:,1);zeros(1,3) 1];          % Create transformation of first point and angle
             q0 = self.robot.getpos();                                                            % Initial guess for joint angles
             qMatrix = zeros(steps,self.numJoints);       % Array for joint anglesR
             qMatrix(1,:) = self.robot.ikcon(T,q0);                                            % Solve joint angles to achieve first waypoint
@@ -151,11 +145,7 @@ classdef RMRCTrajGen < handle
             for i = 1:steps-1
                 T = self.robot.fkine(qMatrix(i,:));                                           % Get forward transformation at current joint state
                 deltaX = x(:,i+1) - T(1:3,4);                                         	% Get position error from next waypoint
-                if self.numJoints == 4
-                    Rd = rpy2r(0,theta(2,i+1),0);                     % Get next RPY angles, convert to rotation matrix
-                elseif self.numJoints == 6
-                    Rd = rpy2r(theta(1,i+1),theta(2,i+1),theta(3,i+1));                     % Get next RPY angles, convert to rotation matrix
-                end
+                Rd = rpy2r(0,theta(2,i+1),0);                     % Get next RPY angles, convert to rotation matrix
                 Ra = T(1:3,1:3);                                                        % Current end-effector rotation matrix
                 Rdot = (1/self.deltaT)*(Rd - Ra);                                                % Calculate rotation matrix error
 %                 deltaTheta = tr2rpy(Rd*Ra');                                            % Convert rotation matrix to RPY angles

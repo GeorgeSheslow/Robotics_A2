@@ -3,8 +3,8 @@ classdef DobotMagician < handle
     properties(Access =public) 
         name = 'DobotMagician';
         model;
-        toolOffset = 0.07;
-        defaultRealQ  = [0,pi/4,pi/4,pi/2];
+        toolOffset = [0 0 -0.05];
+        defaultQ  = [0,pi/4,pi/4,pi/2];
         trajGen;
     end
 %% Variables - Private
@@ -18,9 +18,10 @@ classdef DobotMagician < handle
             self.CreateModel();
             self.model.base = T;
             self.PlotAndColourRobot(self.name);
-            self.model.animate(self.defaultRealQ);
+            self.model.animate(self.defaultQ);
             self.trajGen = RMRCTrajGen(self.model);
             self.trajGen.toolOffset = self.toolOffset;
+            self.trajGen.epsilon = 0.0001;
         end
     end
     methods (Access =private)
@@ -32,9 +33,9 @@ classdef DobotMagician < handle
             L(4) = Link('d',0,        'a',0.06,      'alpha',pi/2,  'offset',-pi/2);
 
             L(1).qlim = [-135 135]*pi/180;
-            L(2).qlim = [5 80]*pi/180;
-            L(3).qlim = [-5 85]*pi/180;
-            L(4).qlim = [-90 90]*pi/180;
+            L(2).qlim = [0 85]*pi/180;
+            L(3).qlim = [0 130]*pi/180;
+            L(4).qlim = [0 90]*pi/180;
             self.model = SerialLink(L,'name',self.name);
         end   
 %% PlotAndColourRobot

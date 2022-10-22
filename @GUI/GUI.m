@@ -68,13 +68,9 @@ classdef GUI < matlab.apps.AppBase & handle
         
         safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
         safetyLEDS;
-<<<<<<< HEAD
+
         dobotText = "DOBOT"; % default text
         paper;
-=======
-        dobotText;
-
->>>>>>> c4a5b8457819e5fd081baadf04f00b9341637daf
     end
     methods 
         function self = GUI()
@@ -85,7 +81,6 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupCommandButtons();
             self.setupJogButtons();
             self.setupSafetyLEDS();
-<<<<<<< HEAD
         end
         function IRBPickAndPlace(self,ver)
             waitpoint = [-0.3,0,0.6];
@@ -108,8 +103,6 @@ classdef GUI < matlab.apps.AppBase & handle
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
                 self.IRBRobot.trajGen.animateQ(traj)
             end
-=======
->>>>>>> c4a5b8457819e5fd081baadf04f00b9341637daf
         end
         function updateSafetyVars(self, estop, ir_safety, ir_data)
             self.safety.hardwareEstop = estop;
@@ -136,7 +129,7 @@ classdef GUI < matlab.apps.AppBase & handle
             self.dobotRobot = DobotMagician(transl(-0.62,0,0.72)); %table height: 0.72
 %             self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
             
-%             self.IRBRobot = IRB120(transl(0.2,0,0.72));
+            self.IRBRobot = IRB120(transl(0.2,0,0.72));
 
 %             self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
             
@@ -193,13 +186,35 @@ classdef GUI < matlab.apps.AppBase & handle
         function startSim(self, event, app)
             
             disp('Starting Simulation');
+            self.IRBPickAndPlace(1);
             % TODO make button disbaled
             write = TextToTraj(self.dobotText);
             write.addBaseOffsets(self.dobotRobot.model.base(1:3,4));
             xWrite = write.GetTraj();
-            write.PlotTraj();
-%             self.IRBPickAndPlace(1);
-%             self.IRBPickAndPlace(2);
+            [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
+            self.dobotRobot.trajGen.animateQ(qMatrix) % Animate
+            [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
+            self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,1); % animate
+            [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.3,0,0.25) * self.dobotRobot.model.base); % Move EE to neutal pose
+            self.dobotRobot.trajGen.animateQ(qMatrix)
+
+            self.IRBPickAndPlace(2);
+        end
+        function drawText(self,robot,paperHeight,x, qMatrix, desiredTrajOn)
+            for j = 1:size(qMatrix,1)
+                newQ = qMatrix(j,:);
+                robot.model.animate(newQ);
+                drawnow();
+                hold on
+                pos = robot.model.fkine(robot.model.getpos());
+                if pos(3,4) <= paperHeight + 0.005
+                    plot3(pos(1,4)+robot.toolOffset(1),pos(2,4)+robot.toolOffset(2),pos(3,4)+robot.toolOffset(3),'r.');
+                    if desiredTrajOn
+                        plot3(x(1,4)+robot.toolOffset(1),x(2,4)+robot.toolOffset(2),x(3,4)+robot.toolOffset(3),'k.');
+                    end
+                end
+                pause(0.1);
+            end 
         end
         function stopSim(self, event, app)
             disp('Pausing Simulation');
