@@ -4,7 +4,7 @@ classdef DobotMagician < handle
         name = 'DobotMagician';
         model;
         toolOffset = [0 0 -0.05];
-        defaultQ  = [0,pi/4,pi/4,pi/2];
+        defaultQ  = [0,deg2rad(8),deg2rad(133),deg2rad(40)];
         trajGen;
     end
 %% Variables - Private
@@ -34,7 +34,7 @@ classdef DobotMagician < handle
 
             L(1).qlim = [-135 135]*pi/180;
             L(2).qlim = [0 85]*pi/180;
-            L(3).qlim = [0 130]*pi/180;
+            L(3).qlim = [0 135]*pi/180;
             L(4).qlim = [0 90]*pi/180;
             self.model = SerialLink(L,'name',self.name);
         end   

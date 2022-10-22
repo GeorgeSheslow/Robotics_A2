@@ -11,7 +11,7 @@ classdef Environment < handle
     properties(Access = public)
         trayOnePos = transl(0.05,-0.3,0.71)*trotz(90,'deg');
         trayTwoPos = transl(0.05,0.3,0.71)*trotz(90,'deg');
-        trayThreePos = transl(-0.4,0,0.71)*trotz(90,'deg'); % Middle Dobot Tray
+        trayThreePos = transl(-0.38,0,0.71)*trotz(90,'deg'); % Middle Dobot Tray
     end
     methods (Access =public)
         function self = Environment(type)
