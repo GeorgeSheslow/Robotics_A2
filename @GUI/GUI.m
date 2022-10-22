@@ -67,6 +67,7 @@ classdef GUI < matlab.apps.AppBase & handle
         titlePos = [900 700];
         
         safety = struct;
+        dobotText;
 
     end
     methods 
@@ -131,12 +132,23 @@ classdef GUI < matlab.apps.AppBase & handle
             self.estopButton.Callback = @self.onEstopButton;
         end
         function previewText(self, event, app)
-            disp('Text trajectory preview');
+            figure(2)
+            if strlength(self.dobotText) > 0
+                write = TextToTraj(self.dobotText,"text");
+            else
+                write = TextToTraj("Dobot","text");
+            end
+            drawPoints = write.GetTraj();
+            for i = 1:size(drawPoints,2)
+                plot3(drawPoints(1,i),drawPoints(2,i),drawPoints(3,i),'k.');
+                hold on
+            end
+            axis padded;
+             self.simStatus.String = "Preview Text";
         end
         function setInputText(self, event, app)
-            disp('User entered: ');
-            disp(event.String);
-            % TODO generate text trajectory for dobot 
+            self.dobotText = event.String;
+            self.simStatus.String = "Text Added";
         end
         function startSim(self, event, app)
             % TODO: Add checker, that word has been entered by user
