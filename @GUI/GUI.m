@@ -66,7 +66,8 @@ classdef GUI < matlab.apps.AppBase & handle
         intputTextPos = [950 645];
         titlePos = [900 700];
         
-        safety = struct;
+        safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
+        safetyLEDS;
         dobotText;
 
     end
@@ -78,20 +79,24 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupSim();
             self.setupCommandButtons();
             self.setupJogButtons();
-            
-            self.safety.guiEStop = 0; % GUI button state
-            self.safety.hardwareEStop = 0; % Arduino Estop button
-            self.safety.hardwareIR = 0; % Arduino IR Sensor
-            self.safety.StopState = 0; % Emergency Stop State
-            self.safety.SafetyState = 0; % User and second motion for Estop State, stop and be able to resume simulation
-
+            self.setupSafetyLEDS();
         end
         function updateSafetyVars(self, estop, ir_safety, ir_data)
-            disp(estop)
-            disp(ir_safety)
-            disp(ir_data)
-            self.safety.hardwareEStop = estop;
-            self.safety.hardwareIR = ir_safety; 
+            self.safety.hardwareEstop = estop;
+            self.safety.hardwareIR = ir_safety;
+            if self.safety.hardwareEstop == 1
+                self.safetyLEDS{4}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{4}.BackgroundColor = 'Green';
+            end
+            if self.safety.hardwareIR == 1
+                self.safetyLEDS{5}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{5}.BackgroundColor = 'Green';
+            end
+%             disp(estop);
+%             disp(ir_safety);
+%             disp(ir_data);
         end
         function setupSim(self)
             % Load Sim Environment
@@ -161,9 +166,48 @@ classdef GUI < matlab.apps.AppBase & handle
             disp('Pausing Simulation');
         end
         function onEstopButton(self, event, app)
-            self.estopOn = true;
-            self.estopLock = true;
-            self.estopButton.BackgroundColor = 'red';
+            self.safety.guiEstop = xor(self.safety.guiEstop,1);
+            self.safety.guiEstop
+            if self.safety.guiEstop == 1
+                self.safetyLEDS{3}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{3}.BackgroundColor = 'Green';
+            end
+        end
+        function setupSafetyLEDS(self)
+%             ("emergencyStopState",0,"SafetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
+            self.safetyLEDS{1} = uicontrol('Style','text','String',"emergencyStopState",'FontSize',14,'position',[1470 730 140 25],'BackgroundColor','Green');
+            self.safetyLEDS{2} = uicontrol('Style','text','String',"safetyStopState",'FontSize',14,'position',[1480 690 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{3} = uicontrol('Style','text','String',"GUI ESTOP",'FontSize',14,'position',[1480 620 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{4} = uicontrol('Style','text','String',"HW ESTOP",'FontSize',14,'position',[1480 580 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{5} = uicontrol('Style','text','String',"HW IR",'FontSize',14,'position',[1480 540 120 25],'BackgroundColor','Green');
+        end
+        function updateSafetyLEDs(self)
+            if self.safety.emergencyStopState == 1
+                self.safetyLEDS{1}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{1}.BackgroundColor = 'Green';
+            end
+            if self.safety.safetyStopState == 1
+                self.safetyLEDS{2}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{2}.BackgroundColor = 'Green';
+            end
+            if self.safety.guiEstop == 1
+                self.safetyLEDS{3}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{3}.BackgroundColor = 'Green';
+            end
+            if self.safety.hardwareEstop == 1
+                self.safetyLEDS{4}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{4}.BackgroundColor = 'Green';
+            end
+            if self.safety.hardwareIR == 1
+                self.safetyLEDS{5}.BackgroundColor = 'Red';
+            else
+                self.safetyLEDS{5}.BackgroundColor = 'Green';
+            end
         end
         function setupJogButtons(self)
             
