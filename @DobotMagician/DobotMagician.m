@@ -20,6 +20,7 @@ classdef DobotMagician < handle
             self.PlotAndColourRobot(self.name);
             self.model.animate(self.defaultRealQ);
             self.trajGen = RMRCTrajGen(self.model);
+            self.trajGen.toolOffset = self.toolOffset;
         end
     end
     methods (Access =private)
