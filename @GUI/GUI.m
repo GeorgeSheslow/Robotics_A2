@@ -197,7 +197,6 @@ classdef GUI < matlab.apps.AppBase & handle
             self.dobotRobot.trajGen.animateQ(qMatrix) % Animate
             [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
             self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
-            self.paper.clearText();
             [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.3,0,0.25) * self.dobotRobot.model.base); % Move EE to neutal pose
             self.dobotRobot.trajGen.animateQ(qMatrix)
 
