@@ -1,6 +1,6 @@
 classdef GUI < matlab.apps.AppBase & handle
     
-    properties(Access = private)
+    properties(Access = public)
         fig;
         simPlot_h;
         
@@ -69,7 +69,7 @@ classdef GUI < matlab.apps.AppBase & handle
         safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
         safetyLEDS;
         dobotText;
-
+        paper;
     end
     methods 
         function self = GUI()
@@ -80,6 +80,28 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupCommandButtons();
             self.setupJogButtons();
             self.setupSafetyLEDS();
+        end
+        function IRBPickAndPlace(self,ver)
+            waitpoint = [-0.3,0,0.6];
+            paperoffset = transl(0,0,0.19);
+            if ver == 1
+                self.paper.MoveObj(self.environment.trayOnePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
+                [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayOnePos * paperoffset);
+                self.IRBRobot.trajGen.animateQ(traj)
+                [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayThreePos * paperoffset);
+                self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
+                self.paper.MoveObj(self.environment.trayThreePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
+                [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
+                self.IRBRobot.trajGen.animateQ(traj)
+            elseif ver == 2
+                [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayThreePos * paperoffset);
+                self.IRBRobot.trajGen.animateQ(traj)
+                [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayTwoPos * paperoffset);
+                self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
+                self.paper.MoveObj(self.environment.trayTwoPos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
+                [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
+                self.IRBRobot.trajGen.animateQ(traj)
+            end
         end
         function updateSafetyVars(self, estop, ir_safety, ir_data)
             self.safety.hardwareEstop = estop;
@@ -100,14 +122,18 @@ classdef GUI < matlab.apps.AppBase & handle
         end
         function setupSim(self)
             % Load Sim Environment
-%             self.environment = Environment("Simple");
+            self.environment = Environment("Simple");
             
             % Load the 2 Robot
 %             self.dobotRobot = DobotMagician(transl(-0.7,0,0.72)); %table height: 0.72
 %             self.dobotRobot.model.animate(self.dobotRobot.getQNeutral());
             
-%             self.IRBRobot = IRB120(transl(0.2,0,0.72)*rpy2tr(0,0,180,'deg'));
+            self.IRBRobot = IRB120(transl(0.2,0,0.72));
+
 %             self.IRBRobot.model.animate(self.IRBRobot.getQNeutral());
+            
+            % Add Paper model
+            self.paper = Paper(self.environment.trayOnePos * transl(0,0,0.03));
         end
         function setupCommandButtons(self)
             % GUI Title
@@ -161,6 +187,8 @@ classdef GUI < matlab.apps.AppBase & handle
             disp('Starting Simulation');
             % TODO make button disbaled, during simulation, or change to a
             % continue button
+            self.IRBPickAndPlace(1);
+            self.IRBPickAndPlace(2);
         end
         function stopSim(self, event, app)
             disp('Pausing Simulation');
