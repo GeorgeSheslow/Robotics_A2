@@ -66,11 +66,12 @@ classdef GUI < matlab.apps.AppBase & handle
         intputTextPos = [950 645];
         titlePos = [900 700];
         
-        safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
+        safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0,"guiPause",0);
         safetyLEDS;
 
         dobotText = "DOBOT"; % default text
         paper;
+        safetyJog = 0;
     end
     methods 
         function self = GUI()
@@ -109,17 +110,41 @@ classdef GUI < matlab.apps.AppBase & handle
             self.safety.hardwareIR = ir_safety;
             if self.safety.hardwareEstop == 1
                 self.safetyLEDS{4}.BackgroundColor = 'Red';
+                self.updateEmergencyState(1);
             else
                 self.safetyLEDS{4}.BackgroundColor = 'Green';
+                self.updateEmergencyState(0);
             end
             if self.safety.hardwareIR == 1
                 self.safetyLEDS{5}.BackgroundColor = 'Red';
+                self.updateSafetyState(1);
             else
                 self.safetyLEDS{5}.BackgroundColor = 'Green';
+                self.updateSafetyState(0);
             end
 %             disp(estop);
 %             disp(ir_safety);
 %             disp(ir_data);
+        end
+        function updateEmergencyState(self,state)
+            disp(state)
+            if (state == 1  && self.safety.guiEstop == 0) || (state == 1  &&  self.safety.hardwareEstop == 0)
+                self.safety.emergencyStopState = 1;
+                self.safetyLEDS{1}.BackgroundColor = 'Red';
+                self.safetyJog = 0;
+            elseif state == 0 && self.safetyJog == 1 && self.safety.guiEstop == 0 && self.safety.hardwareEstop == 0
+                self.safety.emergencyStopState = 0;
+                self.safetyLEDS{1}.BackgroundColor = 'Green';
+            end
+        end
+        function updateSafetyState(self,state)
+            if state == 1
+                self.safety.safetyStopState = 1;
+                self.safetyLEDS{2}.BackgroundColor = 'Red';
+            elseif self.safety.hardwareIR == 0 && self.safety.guiPause == 0
+                self.safety.safetyStopState = 0;
+                self.safetyLEDS{2}.BackgroundColor = 'Green';
+            end
         end
         function setupSim(self)
             % Load Sim Environment
@@ -182,6 +207,7 @@ classdef GUI < matlab.apps.AppBase & handle
         function startSim(self, event, app)
             
             disp('Starting Simulation');
+            event.String = 'Resume Sim';
             self.paper.clearText();
             self.simStatus.String = "IRB Pick/Place";
             self.IRBPickAndPlace(1);
@@ -221,18 +247,30 @@ classdef GUI < matlab.apps.AppBase & handle
         end
         function stopSim(self, event, app)
             disp('Pausing Simulation');
+            if event.String == "Stop Sim" % TODO:  && state machine variable > 0
+                self.safety.guiPause = 1;
+                event.BackgroundColor = 'Red';
+                event.String = "Stopped";
+                self.updateSafetyState(1);
+            else
+                event.String = "Stop Sim";
+                self.safety.guiPause = 0;
+                event.BackgroundColor = 'White';
+                self.updateSafetyState(0);
+            end
         end
         function onEstopButton(self, event, app)
             self.safety.guiEstop = xor(self.safety.guiEstop,1);
-            self.safety.guiEstop
             if self.safety.guiEstop == 1
                 self.safetyLEDS{3}.BackgroundColor = 'Red';
+                event.BackgroundColor = 'Red';
+                self.updateEmergencyState(1);
             else
                 self.safetyLEDS{3}.BackgroundColor = 'Green';
+                event.BackgroundColor = 'White';
             end
         end
         function setupSafetyLEDS(self)
-%             ("emergencyStopState",0,"SafetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
             self.safetyLEDS{1} = uicontrol('Style','text','String',"emergencyStopState",'FontSize',14,'position',[1470 730 140 25],'BackgroundColor','Green');
             self.safetyLEDS{2} = uicontrol('Style','text','String',"safetyStopState",'FontSize',14,'position',[1480 690 120 25],'BackgroundColor','Green');
             self.safetyLEDS{3} = uicontrol('Style','text','String',"GUI ESTOP",'FontSize',14,'position',[1480 620 120 25],'BackgroundColor','Green');
@@ -410,8 +448,14 @@ classdef GUI < matlab.apps.AppBase & handle
                     desiredPosition(3) = desiredPosition(3) - self.cartJoggingDelta;
             end
             
-            q = robot.model.ikcon(transl(desiredPosition));
-            robot.model.animate(q);
+            if self.safety.hardwareEstop == 0 && self.safety.guiEstop == 0 && self.safety.safetyStopState == 0 %% need to be able to jog in emergency state
+                q = robot.model.ikcon(transl(desiredPosition));
+                robot.model.animate(q);
+                if self.safety.emergencyStopState == 1
+                    self.safetyJog = 1;
+                    self.updateEmergencyState(0);
+                end
+            end
 %             [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),3);
 %             robot.trajGen.animateQ(qMatrix)
         end

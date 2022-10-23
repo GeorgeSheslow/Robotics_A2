@@ -12,7 +12,7 @@ classdef HardwareSafety
             self.gui = gui;
             configureTerminator(self.safetyHardware,"CR/LF");
             flush(self.safetyHardware);
-            self.safetyHardware.UserData = struct("IRData",[],"IR", 1, "Counter", 1, "Estop", 1, "Safety", 1);
+            self.safetyHardware.UserData = struct("IRData",[],"IR", 0, "Counter", 1, "Estop", 0, "Safety", 0);
             configureCallback(self.safetyHardware,"terminator",@self.hardwareSafetyCallback);
         end
 
