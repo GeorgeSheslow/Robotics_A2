@@ -12,7 +12,7 @@ classdef visualServo < handle
                 'resolution', [1024 1024], 'centre', [512 512],'name', 'IRBCamera');
         end
         function vs(self)
-            q0 = [0;-pi/2;0;0;pi;0];
+%             q0 = [0;0;0;0;0;0];
            
             qr1 = self.r1.model.fkine(self.r1.model.getpos());
             qr1 = qr1(1:3,4);
@@ -20,24 +20,25 @@ classdef visualServo < handle
                 qr1(2)-0.1,qr1(2)+0.1,qr1(2)+0.1,qr1(2)-0.1;
                 qr1(3)+0.35,qr1(3)+0.35,qr1(3)+0.15,qr1(3)+0.15];
 
-%             cam = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
-%                 'resolution', [1024 1024], 'centre', [512 512],'name', 'IRBCamera');
 
             fps = 25;
             lambda = 0.8;
             depth = 1;
 
-            pStar = bsxfun(@plus, 200*[-0.5 -0.5 0.5 0.5; -0.5 0.5 0.5 -0.5], self.cam.pp');
+            pStar = bsxfun(@plus, 200*[-1 -1 1 1; -1 1 1 -1], self.cam.pp');
             
-%             q0 = self.r2.model.getpos();
+            q0 = (self.r2.model.getpos())';
             Tc0 = self.r2.model.fkine(q0);
-            self.r2.model.animate(q0');
+            hold on
+%             self.r2.model.animate(q0');
+            pose = self.r1.model.fkine(self.r1.model.getpos())*transl(0.02,0,0.2);
+            paper = Paper(pose*troty(pi/2));
             drawnow
             
 
             self.cam.T = Tc0; % set camera to initial pose
             plot_sphere(P, 0.05, 'b')
-%             self.cam.plot_camera('Tcam',Tc0, 'label','scale',0.05);
+            self.cam.plot_camera('Tcam',Tc0, 'label','scale',0.05);
             
             lighting gouraud
             light
@@ -130,7 +131,7 @@ classdef visualServo < handle
                 history = [history hist];
 
                 pause (1/fps)
-                if ~isempty(100) && (ksteps > 100)
+                if ~isempty(200) && (ksteps > 200)
                     break;
                 end
                 q0 = q; % update current joint position
