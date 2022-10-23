@@ -7,22 +7,13 @@ set(figure,'units','normalized','outerpos',[0 0 1 1.2]);
 
 robot = IRB120(transl(0,0,0));
 
-    q0 = robot.model.getpos();
-        jointTransforms = {};
-        modelPoints = {robot.model.base};
-        for i=1:6
-            jointTransforms{i} = robot.model.A(i, q0);
-            modelPoints{i+1} = cell2mat(modelPoints(i))*cell2mat(jointTransforms(i));
-        end
-
-
 centerPoints = [0.0, 0.0, 0.0935;
                 0.0, 0.0515, 0.0;
                 -0.186, 0.0, 0.0;
                 0.0, 0.0, 0.0225;
                 0.0, 0.095, 0.0;
                 0.0, 0.0, 0.0;
-                -0.1115, 0.0, 0.0;];
+                0.0, 0.0, 0.0;];
 radii = [0.09, 0.09, 0.0935; %[X,Y,Z]
          0.09, 0.0515, 0.09; %[X,Z,Y]
          0.186, 0.09, 0.107; %[Z,X,Y]
@@ -44,17 +35,17 @@ radii = [0.09, 0.09, 0.0935; %[X,Y,Z]
  
  robot = DobotMagician(transl(0,0,0));
 
-centerPoints = [0.0, 0.0, 0.0;
-                0.0, 0.0, 0.0;
-                0.0, 0.0, 0.0;
-                0.0, 0.0, 0.0;
+centerPoints = [0.0, 0.0, 0.03;
+                0.0, 0.02, 0.0;
+                -0.07, -0.02, 0.0;
+                -0.065, -0.02, 0.0;
                 0.0, 0.0, 0.0;];
             
-radii = [0.1,0.1,0.1;
-         0.1,0.1,0.1;
-         0.1,0.1,0.1;
-         0.1,0.1,0.1;
-         0.1,0.1,0.1;];
+radii = [0.08,0.08,0.03;
+         0.07,0.07,0.05;
+         0.095,0.04,0.03;
+         0.1,0.035,0.0155;
+         0.0175,0.0175,0.0705;];
      
  cubePosition = [0,0,0];
  
