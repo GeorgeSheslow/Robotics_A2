@@ -30,11 +30,20 @@ Link1ellipsoid = surf(X,Y,Z);
 view(3);
 %%
 % Link 2
-centerPoint{2} = transl(cell2mat(modelPoints(3))*transl(-0.135,0,0)); %needs to be movable
 
+
+centerPoint{2} = transl(cell2mat(modelPoints(3))*transl(-0.135,0,0)); %needs to be movable
+rotationMatrix1 = cell2mat(modelPoints(3));
 radii{2} = [0.09,0.107,0.186];
 [X,Y,Z] = ellipsoid( centerPoint{2}(1), centerPoint{2}(2), centerPoint{2}(3), radii{2}(1), radii{2}(2), radii{2}(3) );
 Link2ellipsoid = surf(X,Y,Z);
+rotation = tr2rpy(rotationMatrix1,'deg')
+%%
+rotate(Link2ellipsoid,[0 1 0], rotation(1), centerPoint{2})
+rotate(Link2ellipsoid,[0 0 1], -rotation(2), centerPoint{2})
+X2 = get(Link1ellipsoid,'xdata');
+x2min = min(X2)
+
 %%
 % Link 3/4
 centerPoint{3} = transl(cell2mat(modelPoints(4))*transl(0,0,0.142)); %needs to be movable[0.151,0,0.639]
@@ -52,9 +61,8 @@ Link5ellipsoid = surf(X,Y,Z);
 axis equal
 
 
-%% generate obsticle @ 0.3,-0.4,0
-% centerPoint = [0.3,-0.45,0.5];
-% [Y,Z] = meshgrid(-0.45:0.05:-0.35,0:0.05:0.1);
+%% generate obstical
+
 [Y,Z] = meshgrid(-0.1:0.05:0.1,-0.1:0.05:0.1);
 sizeMat = size(Y);
 X = repmat(0.1,sizeMat(1),sizeMat(2));
@@ -68,7 +76,8 @@ cubePoints = [ cubePoints ...
              ; cubePoints * roty(-pi/2)];  
 
 cubePoints = cubePoints + repmat([0.3,-0.4,0.1],size(cubePoints,1),1);
-cube_h = plot3(cubePoints(:,1),cubePoints(:,2),cubePoints(:,3),'r.');
+cube_h = plot3(cubePoints(:,1),cubePoints(:,2),cubePoints(:,3),'b.');
+
 %% Check Collision
 
 for i = 1:4
