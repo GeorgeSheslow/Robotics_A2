@@ -7,5 +7,5 @@ clear
 clc
 
 gui = GUI();
-HardwareSafety("/dev/tty.usbserial-143140",gui);
+HardwareSafety("/dev/tty.usbserial-144140",gui);
 

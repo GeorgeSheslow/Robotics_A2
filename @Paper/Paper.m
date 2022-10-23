@@ -25,7 +25,6 @@ classdef Paper < handle
                     temp = transl(self.text_data(i,1:3));
                     temp = (Pose * inv(self.currentPoseText)) * temp;
                     self.text_data(i,1:3) = temp(1:3,4)';
-                    disp(self.text_data(2,1:3))
                 end
                 % replot
                 self.text_h.reset();

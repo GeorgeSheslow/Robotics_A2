@@ -45,7 +45,7 @@ classdef GUI < matlab.apps.AppBase & handle
         cartButtonNames = ['x+';'x-';'z+';'z-';'y+';'y-'];
         cartBSize = [50 30];
         
-        cartJoggingDelta = 0.02;
+        cartJoggingDelta = 0.03;
         
         % Software Estop
         estopButton
@@ -66,11 +66,17 @@ classdef GUI < matlab.apps.AppBase & handle
         intputTextPos = [950 645];
         titlePos = [900 700];
         
-        safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
+        safety = struct("emergencyStopState",0,"safetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0,"guiPause",0);
         safetyLEDS;
 
         dobotText = "DOBOT"; % default text
         paper;
+        safetyJog = 0;
+        stateMachineVar =0;
+        simOn = 0;
+        
+        collisionDemoButton;
+        visualServoDemoButton;
     end
     methods 
         function self = GUI()
@@ -81,6 +87,7 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupCommandButtons();
             self.setupJogButtons();
             self.setupSafetyLEDS();
+            self.setupDemoButtons();
         end
         function IRBPickAndPlace(self,ver)
             waitpoint = [-0.3,0,0.6];
@@ -88,20 +95,20 @@ classdef GUI < matlab.apps.AppBase & handle
             if ver == 1
                 self.paper.MoveObj(self.environment.trayOnePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayOnePos * paperoffset);
-                self.IRBRobot.trajGen.animateQ(traj)
+                self.IRBRobot.trajGen.animateQWGUI(traj,self)
                 [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayThreePos * paperoffset);
-                self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
+                self.IRBRobot.trajGen.animateQWObjWGUI(traj,self.paper, self)
                 self.paper.MoveObj(self.environment.trayThreePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
-                self.IRBRobot.trajGen.animateQ(traj)
+                self.IRBRobot.trajGen.animateQWGUI(traj,self)
             elseif ver == 2
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayThreePos * paperoffset);
-                self.IRBRobot.trajGen.animateQ(traj)
+                self.IRBRobot.trajGen.animateQWGUI(traj,self)
                 [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayTwoPos * paperoffset);
-                self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
+                self.IRBRobot.trajGen.animateQWObjWGUI(traj,self.paper, self)
                 self.paper.MoveObj(self.environment.trayTwoPos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
-                self.IRBRobot.trajGen.animateQ(traj)
+                self.IRBRobot.trajGen.animateQWGUI(traj,self)
             end
         end
         function updateSafetyVars(self, estop, ir_safety, ir_data)
@@ -109,17 +116,40 @@ classdef GUI < matlab.apps.AppBase & handle
             self.safety.hardwareIR = ir_safety;
             if self.safety.hardwareEstop == 1
                 self.safetyLEDS{4}.BackgroundColor = 'Red';
+                self.updateEmergencyState(1);
             else
                 self.safetyLEDS{4}.BackgroundColor = 'Green';
+                self.updateEmergencyState(0);
             end
             if self.safety.hardwareIR == 1
                 self.safetyLEDS{5}.BackgroundColor = 'Red';
+                self.updateSafetyState(1);
             else
                 self.safetyLEDS{5}.BackgroundColor = 'Green';
+                self.updateSafetyState(0);
             end
 %             disp(estop);
 %             disp(ir_safety);
 %             disp(ir_data);
+        end
+        function updateEmergencyState(self,state)
+            if (state == 1  && self.safety.guiEstop == 0) || (state == 1  &&  self.safety.hardwareEstop == 0)
+                self.safety.emergencyStopState = 1;
+                self.safetyLEDS{1}.BackgroundColor = 'Red';
+                self.safetyJog = 0;
+            elseif state == 0 && self.safetyJog == 1 && self.safety.guiEstop == 0 && self.safety.hardwareEstop == 0
+                self.safety.emergencyStopState = 0;
+                self.safetyLEDS{1}.BackgroundColor = 'Green';
+            end
+        end
+        function updateSafetyState(self,state)
+            if state == 1
+                self.safety.safetyStopState = 1;
+                self.safetyLEDS{2}.BackgroundColor = 'Red';
+            elseif self.safety.hardwareIR == 0 && self.safety.guiPause == 0
+                self.safety.safetyStopState = 0;
+                self.safetyLEDS{2}.BackgroundColor = 'Green';
+            end
         end
         function setupSim(self)
             % Load Sim Environment
@@ -179,31 +209,56 @@ classdef GUI < matlab.apps.AppBase & handle
             self.dobotText = event.String;
             self.simStatus.String = "Text Added";
         end
+        function runSim(self)
+            if(self.simOn)
+                switch(self.stateMachineVar)
+                    case 0
+                        disp('Starting Simulation');
+                        self.paper.clearText();
+                        self.simStatus.String = "IRB Pick/Place";
+                        self.IRBPickAndPlace(1);
+                    case 1
+                        self.simStatus.String = "Dobot RMRC Calcs";
+                        write = TextToTraj(self.dobotText);
+                        write.addBaseOffsets(self.dobotRobot.model.base(1:3,4));
+                        xWrite = write.GetTraj();
+                        [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
+                        self.simStatus.String = "Dobot Drawing";
+                        self.dobotRobot.trajGen.animateQWGUI(qMatrix,self) % Animate
+                        [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
+                        self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
+                        [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.17,0,0.157) * self.dobotRobot.model.base); % Move EE to neutral pose
+                        self.dobotRobot.trajGen.animateQWGUI(qMatrix,self)
+                    case 2
+                        self.simStatus.String = "IRB Pick/Place";
+                        self.IRBPickAndPlace(2);
+                        self.simStatus.String = "Sim Finished";
+                end
+            end
+            self.stateMachineVar = self.stateMachineVar +1;
+            if self.stateMachineVar > 2
+                self.stateMachineVar = 0;
+            end
+            self.startSim();
+        end
         function startSim(self, event, app)
-            
-            disp('Starting Simulation');
-            self.paper.clearText();
-            self.simStatus.String = "IRB Pick/Place";
-            self.IRBPickAndPlace(1);
-            % TODO make button disbaled
-            self.simStatus.String = "Dobot RMRC Calcs";
-            write = TextToTraj(self.dobotText);
-            write.addBaseOffsets(self.dobotRobot.model.base(1:3,4));
-            xWrite = write.GetTraj();
-            [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
-            self.simStatus.String = "Dobot Drawing";
-            self.dobotRobot.trajGen.animateQ(qMatrix) % Animate
-            [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
-            self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
-            [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.17,0,0.157) * self.dobotRobot.model.base); % Move EE to neutal pose
-            self.dobotRobot.trajGen.animateQ(qMatrix)
-            self.simStatus.String = "IRB Pick/Place";
-            self.IRBPickAndPlace(2);
-            self.simStatus.String = "Sim Finished";
+            self.simOn = 1;
+            event.String = 'Sim Running';
+            if self.safety.emergencyStopState == 0
+                self.runSim();
+            end
         end
         function drawText(self,robot,paperHeight,x, qMatrix, desiredTrajOn)
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
+                disp(self.safety);
+                if(self.safety.emergencyStopState)
+                    self.simOn = 0;
+                    break;
+                end
+                while(self.safety.safetyStopState)
+                    pause(0.5);
+                end
                 robot.model.animate(newQ);
                 drawnow();
                 hold on
@@ -221,18 +276,30 @@ classdef GUI < matlab.apps.AppBase & handle
         end
         function stopSim(self, event, app)
             disp('Pausing Simulation');
+            if event.String == "Stop Sim" % TODO:  && state machine variable > 0
+                self.safety.guiPause = 1;
+                event.BackgroundColor = 'Red';
+                event.String = "Stopped";
+                self.updateSafetyState(1);
+            else
+                event.String = "Stop Sim";
+                self.safety.guiPause = 0;
+                event.BackgroundColor = 'White';
+                self.updateSafetyState(0);
+            end
         end
         function onEstopButton(self, event, app)
             self.safety.guiEstop = xor(self.safety.guiEstop,1);
-            self.safety.guiEstop
             if self.safety.guiEstop == 1
                 self.safetyLEDS{3}.BackgroundColor = 'Red';
+                event.BackgroundColor = 'Red';
+                self.updateEmergencyState(1);
             else
                 self.safetyLEDS{3}.BackgroundColor = 'Green';
+                event.BackgroundColor = 'White';
             end
         end
         function setupSafetyLEDS(self)
-%             ("emergencyStopState",0,"SafetyStopState",0, "guiEstop",0,"hardwareEstop",0,"hardwareIR",0);
             self.safetyLEDS{1} = uicontrol('Style','text','String',"emergencyStopState",'FontSize',14,'position',[1470 730 140 25],'BackgroundColor','Green');
             self.safetyLEDS{2} = uicontrol('Style','text','String',"safetyStopState",'FontSize',14,'position',[1480 690 120 25],'BackgroundColor','Green');
             self.safetyLEDS{3} = uicontrol('Style','text','String',"GUI ESTOP",'FontSize',14,'position',[1480 620 120 25],'BackgroundColor','Green');
@@ -378,12 +445,15 @@ classdef GUI < matlab.apps.AppBase & handle
             % check joint limits
             qlim = robot.model.qlim();
             if (joints(jointID) > qlim(jointID,1)) && (joints(jointID) < qlim(jointID,2))
-                robot.model.animate(joints);
-                % estop check
-                if self.estopLock == true
-                    self.estopLock = false;
-                    self.estopOn = false;
-                    self.estopButton.BackgroundColor = 'white';
+                if self.safety.safetyStopState == 0 && self.safety.guiEstop == 0 && self.safety.hardwareEstop == 0
+                    robot.model.animate(joints);
+                    if self.safety.emergencyStopState == 1
+                        self.safetyJog = 1;
+                        self.updateEmergencyState(0);
+                        if self.stateMachineVar > 0
+                            self.stateMachineVar = self.stateMachineVar - 1;
+                        end
+                    end
                 end
             else
                 disp('jog out of joint limits');
@@ -394,7 +464,6 @@ classdef GUI < matlab.apps.AppBase & handle
             currentPose = robot.model.fkine(robot.model.getpos());
             currentPosition = currentPose(1:3,4);
             desiredPosition = currentPosition;
-
             switch(dir)
                 case 'x+'
                     desiredPosition(1) = desiredPosition(1) + self.cartJoggingDelta;
@@ -410,10 +479,32 @@ classdef GUI < matlab.apps.AppBase & handle
                     desiredPosition(3) = desiredPosition(3) - self.cartJoggingDelta;
             end
             
-            q = robot.model.ikcon(transl(desiredPosition));
-            robot.model.animate(q);
-%             [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),3);
-%             robot.trajGen.animateQ(qMatrix)
+            if self.safety.hardwareEstop == 0 && self.safety.guiEstop == 0 && self.safety.safetyStopState == 0 %% need to be able to jog in emergency state
+%                 [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),10);
+%                 robot.trajGen.animateQ(qMatrix)                
+                q = robot.model.ikcon(transl(desiredPosition), robot.model.getpos());
+                robot.model.animate(q);
+                if self.safety.emergencyStopState == 1
+                    self.safetyJog = 1;
+                    self.updateEmergencyState(0);
+                    if self.stateMachineVar > 0
+                        self.stateMachineVar = self.stateMachineVar - 1;
+                    end
+                end
+            end
+        end
+        function setupDemoButtons(self)
+            self.collisionDemoButton = uicontrol("String","Collision Demo",'position',[1490 450 100 30]);
+            self.collisionDemoButton.Callback = @onCollisionDemoButton;
+            self.visualServoDemoButton = uicontrol("String","Visual Servoing Demo",'position',[1480 400 120 30]);
+            self.visualServoDemoButton.Callback = @onVisualServoDemoButton;
+        end
+        
+        function onCollisionDemoButton(self, event, app)
+            disp("Collision Demo");
+        end
+        function onVisualServoDemoButton(self, event, app)
+            disp("Visual Servoing Demo");
         end
     end
 end
