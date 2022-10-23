@@ -445,12 +445,15 @@ classdef GUI < matlab.apps.AppBase & handle
             % check joint limits
             qlim = robot.model.qlim();
             if (joints(jointID) > qlim(jointID,1)) && (joints(jointID) < qlim(jointID,2))
-                robot.model.animate(joints);
-                % estop check
-                if self.estopLock == true
-                    self.estopLock = false;
-                    self.estopOn = false;
-                    self.estopButton.BackgroundColor = 'white';
+                if self.safety.safetyStopState == 0 && self.safety.guiEstop == 0 && self.safety.hardwareEstop == 0
+                    robot.model.animate(joints);
+                    if self.safety.emergencyStopState == 1
+                        self.safetyJog = 1;
+                        self.updateEmergencyState(0);
+                        if self.stateMachineVar > 0
+                            self.stateMachineVar = self.stateMachineVar - 1;
+                        end
+                    end
                 end
             else
                 disp('jog out of joint limits');
@@ -478,6 +481,10 @@ classdef GUI < matlab.apps.AppBase & handle
             end
             
             if self.safety.hardwareEstop == 0 && self.safety.guiEstop == 0 && self.safety.safetyStopState == 0 %% need to be able to jog in emergency state
+                
+%             [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),3);
+%             robot.trajGen.animateQ(qMatrix)                
+                
                 q = robot.model.ikcon(transl(desiredPosition));
                 robot.model.animate(q);
                 if self.safety.emergencyStopState == 1
@@ -488,16 +495,14 @@ classdef GUI < matlab.apps.AppBase & handle
                     end
                 end
             end
-%             [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),3);
-%             robot.trajGen.animateQ(qMatrix)
         end
         function setupDemoButtons(self)
             self.collisionDemoButton = uicontrol("String","Collision Demo",'position',[1490 450 100 30]);
             self.collisionDemoButton.Callback = @onCollisionDemoButton;
             self.visualServoDemoButton = uicontrol("String","Visual Servoing Demo",'position',[1480 400 120 30]);
             self.visualServoDemoButton.Callback = @onVisualServoDemoButton;
-            
         end
+        
         function onCollisionDemoButton(self, event, app)
             disp("Collision Demo");
         end
