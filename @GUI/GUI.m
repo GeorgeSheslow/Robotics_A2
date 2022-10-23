@@ -260,7 +260,11 @@ classdef GUI < matlab.apps.AppBase & handle
         function drawText(self,robot,paperHeight,x, qMatrix, desiredTrajOn)
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
-                disp(self.safety);
+                if self.collisionOn
+                    if self.collisionChecker.checkCollision(self.cube.cubePoints)
+                        self.updateEmergencyState(1)
+                    end
+                end
                 if(self.safety.emergencyStopState)
                     self.simOn = 0;
                     break;
