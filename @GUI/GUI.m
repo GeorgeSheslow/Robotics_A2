@@ -72,6 +72,8 @@ classdef GUI < matlab.apps.AppBase & handle
         dobotText = "DOBOT"; % default text
         paper;
         safetyJog = 0;
+        stateMachineVar =0;
+        simOn = 0;
     end
     methods 
         function self = GUI()
@@ -127,7 +129,6 @@ classdef GUI < matlab.apps.AppBase & handle
 %             disp(ir_data);
         end
         function updateEmergencyState(self,state)
-            disp(state)
             if (state == 1  && self.safety.guiEstop == 0) || (state == 1  &&  self.safety.hardwareEstop == 0)
                 self.safety.emergencyStopState = 1;
                 self.safetyLEDS{1}.BackgroundColor = 'Red';
@@ -205,27 +206,37 @@ classdef GUI < matlab.apps.AppBase & handle
             self.simStatus.String = "Text Added";
         end
         function startSim(self, event, app)
-            
-            disp('Starting Simulation');
+            self.simOn = 1;
             event.String = 'Resume Sim';
-            self.paper.clearText();
-            self.simStatus.String = "IRB Pick/Place";
-            self.IRBPickAndPlace(1);
-            % TODO make button disbaled
-            self.simStatus.String = "Dobot RMRC Calcs";
-            write = TextToTraj(self.dobotText);
-            write.addBaseOffsets(self.dobotRobot.model.base(1:3,4));
-            xWrite = write.GetTraj();
-            [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
-            self.simStatus.String = "Dobot Drawing";
-            self.dobotRobot.trajGen.animateQ(qMatrix) % Animate
-            [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
-            self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
-            [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.17,0,0.157) * self.dobotRobot.model.base); % Move EE to neutal pose
-            self.dobotRobot.trajGen.animateQ(qMatrix)
-            self.simStatus.String = "IRB Pick/Place";
-            self.IRBPickAndPlace(2);
-            self.simStatus.String = "Sim Finished";
+            while(self.simOn)
+                switch(self.stateMachineVar)
+                    case 0
+                        disp('Starting Simulation');
+                        self.paper.clearText();
+                        self.simStatus.String = "IRB Pick/Place";
+                        self.IRBPickAndPlace(1);
+                    case 1
+                        self.simStatus.String = "Dobot RMRC Calcs";
+                        write = TextToTraj(self.dobotText);
+                        write.addBaseOffsets(self.dobotRobot.model.base(1:3,4));
+                        xWrite = write.GetTraj();
+                        [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
+                        self.simStatus.String = "Dobot Drawing";
+                        self.dobotRobot.trajGen.animateQ(qMatrix) % Animate
+                        [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
+                        self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
+                        [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.17,0,0.157) * self.dobotRobot.model.base); % Move EE to neutal pose
+                    case 2
+                        self.dobotRobot.trajGen.animateQ(qMatrix)
+                        self.simStatus.String = "IRB Pick/Place";
+                        self.IRBPickAndPlace(2);
+                        self.simStatus.String = "Sim Finished";
+                end
+                self.stateMachineVar = self.stateMachineVar +1;
+                if self.stateMachineVar > 2
+                    self.stateMachineVar = 0;
+                end
+            end
         end
         function drawText(self,robot,paperHeight,x, qMatrix, desiredTrajOn)
             for j = 1:size(qMatrix,1)
