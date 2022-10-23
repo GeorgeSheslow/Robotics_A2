@@ -94,8 +94,9 @@ while true
     J2 = r.model.jacobn(q0); % jacobian for robot in pose q0
     Jinv = pinv(J2);
     % V = dx, dy, dz, dRx, dRy, dRz
-    
-%     qp = Jinv*v;
+    waypoint = [v(1) v(2) v(3)];
+    [x, traj] = r.trajGen.getQForLineTraj(transl(waypoint))
+%     qp = Jinv*v; 
 %     ind=find(qp>deg2rad(420));
 %          if ~isempty(ind)
 %              qp(ind)=deg2rad(420);
@@ -106,7 +107,7 @@ while true
 %          end
 %     q = q0 +(1/fps)*qp;
 
-    r.model.animate(q');
+%     r.model.animate(q');
 %     steps = 2;
 %     currentPoint = r.model.fkine(r.model.getpos());
 %     nextPoint = trnorm(Tcam*trnorm(delta2tr(v)));
