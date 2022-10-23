@@ -25,7 +25,7 @@ classdef GUI < matlab.apps.AppBase & handle
         % GUI Button Properties
         
         % Joint Buttons for Dobot
-        qBPosDobot = [1335 360]; % x,y
+        qBPosDobot = [1255 360]; % x,y
         
         % Joint Buttons for IRB
         qBPosIRB = [1035 360]; % x,y
@@ -35,7 +35,7 @@ classdef GUI < matlab.apps.AppBase & handle
         qBSize = [50 30];
 
         % Cart Buttons for Dobot
-        cartBPosDobot = [1300 430];
+        cartBPosDobot = [1220 430];
 
         % Cart Buttons for IRB
         cartBPosIRB = [1000 430];
@@ -76,7 +76,14 @@ classdef GUI < matlab.apps.AppBase & handle
         simOn = 0;
         
         collisionDemoButton;
+        collisionOn;
+        collisionDir;
+        collisionSelectButtons;
+        collisionDirButtons;
+        
         visualServoDemoButton;
+        
+        cube;
     end
     methods 
         function self = GUI()
@@ -88,6 +95,8 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupJogButtons();
             self.setupSafetyLEDS();
             self.setupDemoButtons();
+            
+            self.cube = Cube(0.1,20,self.environment.trayThreePos(1:3,4)');
         end
         function IRBPickAndPlace(self,ver)
             waitpoint = [-0.3,0,0.6];
@@ -156,8 +165,8 @@ classdef GUI < matlab.apps.AppBase & handle
             self.environment = Environment("Simple");
             
             % Load the 2 Robot
-            self.dobotRobot = DobotMagician(transl(-0.6,0,0.72)); %table height: 0.72        
-            self.IRBRobot = IRB120(transl(0.2,0,0.72));
+%             self.dobotRobot = DobotMagician(transl(-0.6,0,0.72)); %table height: 0.72        
+%             self.IRBRobot = IRB120(transl(0.2,0,0.72));
             
             % Add Paper model
             self.paper = Paper(self.environment.trayOnePos * transl(0,0,0.03));
@@ -300,11 +309,11 @@ classdef GUI < matlab.apps.AppBase & handle
             end
         end
         function setupSafetyLEDS(self)
-            self.safetyLEDS{1} = uicontrol('Style','text','String',"emergencyStopState",'FontSize',14,'position',[1470 730 140 25],'BackgroundColor','Green');
-            self.safetyLEDS{2} = uicontrol('Style','text','String',"safetyStopState",'FontSize',14,'position',[1480 690 120 25],'BackgroundColor','Green');
-            self.safetyLEDS{3} = uicontrol('Style','text','String',"GUI ESTOP",'FontSize',14,'position',[1480 620 120 25],'BackgroundColor','Green');
-            self.safetyLEDS{4} = uicontrol('Style','text','String',"HW ESTOP",'FontSize',14,'position',[1480 580 120 25],'BackgroundColor','Green');
-            self.safetyLEDS{5} = uicontrol('Style','text','String',"HW IR",'FontSize',14,'position',[1480 540 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{1} = uicontrol('Style','text','String',"emergencyStopState",'FontSize',14,'position',[1470 760 140 25],'BackgroundColor','Green');
+            self.safetyLEDS{2} = uicontrol('Style','text','String',"safetyStopState",'FontSize',14,'position',[1480 720 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{3} = uicontrol('Style','text','String',"GUI ESTOP",'FontSize',14,'position',[1480 670 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{4} = uicontrol('Style','text','String',"HW ESTOP",'FontSize',14,'position',[1480 640 120 25],'BackgroundColor','Green');
+            self.safetyLEDS{5} = uicontrol('Style','text','String',"HW IR",'FontSize',14,'position',[1480 610 120 25],'BackgroundColor','Green');
         end
         function updateSafetyLEDs(self)
             if self.safety.emergencyStopState == 1
@@ -363,11 +372,11 @@ classdef GUI < matlab.apps.AppBase & handle
             self.cartButtonsDobot{2} = uicontrol('String','-','position',[(self.cartBPosDobot(1) + self.cartButtonPos(2,1)) (self.cartBPosDobot(2) + self.cartButtonPos(2,2)) self.cartBSize(1) self.cartBSize(2)]);
             self.cartButtonsDobot{2}.Callback = @self.onCartButtonsDobot;
                 % x,y,z select
-            self.cartSelectButtonsDobot{1} = uicontrol('Style','radiobutton','String','x','position',[1250 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsDobot{1} = uicontrol('Style','radiobutton','String','x','position',[1170 500 self.cartBSize(1) self.cartBSize(2)]);
             self.cartSelectButtonsDobot{1}.Callback = @self.OnCartSelectButtonsDobot;
-            self.cartSelectButtonsDobot{2} = uicontrol('Style','radiobutton','String','y','position',[1300 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsDobot{2} = uicontrol('Style','radiobutton','String','y','position',[1220 500 self.cartBSize(1) self.cartBSize(2)]);
             self.cartSelectButtonsDobot{2}.Callback = @self.OnCartSelectButtonsDobot;
-            self.cartSelectButtonsDobot{3} = uicontrol('Style','radiobutton','String','z','position',[1350 500 self.cartBSize(1) self.cartBSize(2)]);
+            self.cartSelectButtonsDobot{3} = uicontrol('Style','radiobutton','String','z','position',[1270 500 self.cartBSize(1) self.cartBSize(2)]);
             self.cartSelectButtonsDobot{3}.Callback = @self.OnCartSelectButtonsDobot;
            
             % Setup EE Jogging Buttons for IRB120
@@ -494,14 +503,75 @@ classdef GUI < matlab.apps.AppBase & handle
             end
         end
         function setupDemoButtons(self)
-            self.collisionDemoButton = uicontrol("String","Collision Demo",'position',[1490 450 100 30]);
-            self.collisionDemoButton.Callback = @onCollisionDemoButton;
-            self.visualServoDemoButton = uicontrol("String","Visual Servoing Demo",'position',[1480 400 120 30]);
+            % Collision GUI buttons
+            uicontrol("Style","text","String", "Collision Checking with Cube","FontSize",16, "position",[1400 530 140 50]);
+            self.collisionDemoButton = uicontrol("String","Start",'position',[1550 530 50 30]);
+            self.collisionDemoButton.Callback = @self.onCollisionDemoButton;
+            
+                % Cube jogging buttons
+            self.collisionSelectButtons{1} = uicontrol("String","+","position",[1500 460 50 30]);
+            self.collisionSelectButtons{2} = uicontrol("String","-","position",[1400 460 50 30]);
+            self.collisionSelectButtons{1}.Callback = @self.onCollisionSelectButton;
+            self.collisionSelectButtons{2}.Callback = @self.onCollisionSelectButton;
+            
+            self.collisionDirButtons{1} = uicontrol('Style','radiobutton','String','x','position',[1400 500 50 30]);
+            self.collisionDirButtons{2} = uicontrol('Style','radiobutton','String','y','position',[1450 500 50 30]);
+            self.collisionDirButtons{3} = uicontrol('Style','radiobutton','String','z','position',[1500 500 50 30]);
+            self.collisionDirButtons{1}.Callback = @self.onCollisionDirButton;
+            self.collisionDirButtons{2}.Callback = @self.onCollisionDirButton;
+            self.collisionDirButtons{3}.Callback = @self.onCollisionDirButton;
+            
+            
+            % Visual Servoing GUI buttons
+            self.visualServoDemoButton = uicontrol("String","Visual Servoing Demo",'position',[1400 380 120 30]);
             self.visualServoDemoButton.Callback = @onVisualServoDemoButton;
         end
-        
         function onCollisionDemoButton(self, event, app)
             disp("Collision Demo");
+            if event.String == "Start"
+                event.String = "Stop";
+                self.collisionOn = 1;
+                self.cube.updatePlot();
+            else
+                event.String = "Start";
+                self.collisionOn = 0;
+                self.cube.removePlots();
+            end
+        end
+        function onCollisionSelectButton(self, event, app)
+            data = [self.collisionDir, event.String];
+            self.cartJogCube(data);
+        end
+        function onCollisionDirButton(self, event, app)
+            buttonName = event.String;
+            for i = 1:size(self.collisionDirButtons,2)
+                if self.collisionDirButtons{i}.String ~= buttonName
+                    self.collisionDirButtons{i}.Value = 0;
+                end
+            end
+            self.collisionDir = event.String;
+        end
+        function cartJogCube(self,dir)
+            % same as for robot but with cube
+            currentPosition = self.cube.position;
+            desiredPosition = currentPosition;
+            switch(dir)
+                case 'x+'
+                    desiredPosition(1) = desiredPosition(1) + self.cartJoggingDelta;
+                case 'x-'
+                    desiredPosition(1) = desiredPosition(1) - self.cartJoggingDelta;
+                case 'y+'
+                    desiredPosition(2) = desiredPosition(2) + self.cartJoggingDelta;
+                case 'y-'
+                    desiredPosition(2) = desiredPosition(2) - self.cartJoggingDelta;
+                case 'z+'
+                    desiredPosition(3) = desiredPosition(3) + self.cartJoggingDelta;
+                case 'z-'
+                    desiredPosition(3) = desiredPosition(3) - self.cartJoggingDelta;
+            end
+            if self.collisionOn
+                self.cube.move(desiredPosition);
+            end
         end
         function onVisualServoDemoButton(self, event, app)
             disp("Visual Servoing Demo");

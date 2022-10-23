@@ -10,6 +10,7 @@ classdef RMRCTrajGen
         m;
         qdot;
         toolOffset = [0 0 0];
+        collisionChecker;
     end
     methods (Access = public)
         function self = RMRCTrajGen(robot)
@@ -23,6 +24,9 @@ classdef RMRCTrajGen
             else
                 disp('Weighting matrix not set');
             end
+        end
+        function setupCollisionChecker(self,robot, centerPoints, radii)
+            self.collisionChecker = CollisionChecker(robot, centerPoints, radii);
         end
         %% Public Traj Calculation Functions
         function [x, q] = getQForLineTraj(self, point)
