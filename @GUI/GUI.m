@@ -165,8 +165,8 @@ classdef GUI < matlab.apps.AppBase & handle
             self.environment = Environment("Simple");
             
             % Load the 2 Robot
-%             self.dobotRobot = DobotMagician(transl(-0.6,0,0.72)); %table height: 0.72        
-%             self.IRBRobot = IRB120(transl(0.2,0,0.72));
+            self.dobotRobot = DobotMagician(transl(-0.6,0,0.72)); %table height: 0.72        
+            self.IRBRobot = IRB120(transl(0.2,0,0.72));
             
             % Add Paper model
             self.paper = Paper(self.environment.trayOnePos * transl(0,0,0.03));

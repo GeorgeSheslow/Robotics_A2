@@ -1,4 +1,4 @@
-classdef RMRCTrajGen
+classdef RMRCTrajGen < handle
     properties (Access = public)
         robot
         numJoints
@@ -79,12 +79,18 @@ classdef RMRCTrajGen
         function animateQWGUI(self, qMatrix, gui)
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
-                if(gui.safety.emergencyStopState)
+                % collision checking
+                if gui.collisionOn
+                    if self.collisionChecker.checkCollision(gui.cube.cubePoints)
+                        gui.updateEmergencyState(1)
+                    end
+                end
+                if gui.safety.emergencyStopState
                     gui.simOn = 0;
                     break;
                 end
-                while(gui.safety.safetyStopState)
-                    pause(0.5);
+                while gui.safety.safetyStopState 
+                    pause(0.3); % not to overload CPU
                 end
                 self.robot.animate(newQ);
                 drawnow();
@@ -108,6 +114,11 @@ classdef RMRCTrajGen
         function animateQWObjWGUI(self, qMatrix, object, gui)
         	for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
+                if gui.collisionOn
+                    if self.collisionChecker.checkCollision(gui.cube.cubePoints)
+                        gui.updateEmergencyState(1)
+                    end
+                end
                 if(gui.safety.emergencyStopState)
                     gui.simOn = 0;
                     break;
