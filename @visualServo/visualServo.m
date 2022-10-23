@@ -21,13 +21,13 @@ classdef visualServo < handle
                 'resolution', [1024 1024], 'centre', [512 512],'name', 'IRBCamera');
         end
         function vs(self)
-            q0 = [0;0;0;0;pi;0];
+            q0 = [0;-pi/2;0;0;pi;0];
            
             qr1 = self.r1.model.fkine(self.r1.model.getpos());
             qr1 = qr1(1:3,4);
             P=[qr1(1),qr1(1),qr1(1),qr1(1);
                 qr1(2)-0.1,qr1(2)+0.1,qr1(2)+0.1,qr1(2)-0.1;
-                qr1(3)+0.25,qr1(3)+0.25,qr1(3)+0.05,qr1(3)+0.05];
+                qr1(3)+0.35,qr1(3)+0.35,qr1(3)+0.15,qr1(3)+0.15];
 
 %             cam = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
 %                 'resolution', [1024 1024], 'centre', [512 512],'name', 'IRBCamera');
@@ -38,16 +38,16 @@ classdef visualServo < handle
 
             pStar = bsxfun(@plus, 200*[-0.5 -0.5 0.5 0.5; -0.5 0.5 0.5 -0.5], self.cam.pp');
             
-            q0 = q0*self.r2.model.getpos();
+%             q0 = self.r2.model.getpos();
             Tc0 = self.r2.model.fkine(q0);
             self.r2.model.animate(q0');
             drawnow
             
 
             self.cam.T = Tc0; % set camera to initial pose
-            pause(5)
-            self.cam.plot_camera(P, 'label','scale',0.05);
             plot_sphere(P, 0.05, 'b')
+%             self.cam.plot_camera('Tcam',Tc0, 'label','scale',0.05);
+            
             lighting gouraud
             light
 
