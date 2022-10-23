@@ -10,4 +10,6 @@ rob2.model.animate(q0');
 % rob1.model.animate([0,pi/4,pi/4,pi/2]);
 
 servo = visualServo(rob1, rob2);
-servo.vs()
+servo.init()
+%%
+servo.vs();
