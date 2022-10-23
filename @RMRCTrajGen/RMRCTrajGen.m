@@ -24,6 +24,7 @@ classdef RMRCTrajGen
                 disp('Weighting matrix not set');
             end
         end
+        %% Public Traj Calculation Functions
         function [x, q] = getQForLineTraj(self, point)
             currentPoint = self.robot.fkine(self.robot.getpos());
             [x, theta] = self.lineTraj(currentPoint(1:3,4)',point(1:3,4)');
@@ -61,11 +62,26 @@ classdef RMRCTrajGen
             [x, theta] = self.zArcTraj(currentPoint(1:3,4)',point(1:3,4)');
             q = self.getRMRC(x,theta,self.steps);
         end
-        function animateQ(self, qMatrix,safetyVars)
+        %% Public Animation Functions
+        function animateQ(self, qMatrix)
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
-%                 while(safetyVars.safetyStopState)
-%                 end
+                self.robot.animate(newQ);
+                drawnow();
+                hold on
+                pause(0.1);
+            end 
+        end        
+        function animateQWGUI(self, qMatrix, gui)
+            for j = 1:size(qMatrix,1)
+                newQ = qMatrix(j,:);
+                if(gui.safety.emergencyStopState)
+                    gui.simOn = 0;
+                    break;
+                end
+                while(gui.safety.safetyStopState)
+                    pause(0.5);
+                end
                 self.robot.animate(newQ);
                 drawnow();
                 hold on
@@ -75,6 +91,26 @@ classdef RMRCTrajGen
         function animateQWObj(self, qMatrix, object)
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
+                self.robot.animate(newQ);
+                % move EE with object attached to it 
+                pose  = self.robot.fkine(self.robot.getpos());
+                pose = pose * transl(self.toolOffset);
+                object.MoveObj(pose);
+                drawnow();
+                hold on
+                pause(0.1);
+            end 
+        end
+        function animateQWObjWGUI(self, qMatrix, object, gui)
+        	for j = 1:size(qMatrix,1)
+                newQ = qMatrix(j,:);
+                if(gui.safety.emergencyStopState)
+                    gui.simOn = 0;
+                    break;
+                end
+                while(gui.safety.safetyStopState)
+                    pause(0.5);
+                end
                 self.robot.animate(newQ);
                 % move EE with object attached to it 
                 pose  = self.robot.fkine(self.robot.getpos());

@@ -95,20 +95,20 @@ classdef GUI < matlab.apps.AppBase & handle
             if ver == 1
                 self.paper.MoveObj(self.environment.trayOnePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayOnePos * paperoffset);
-                self.IRBRobot.trajGen.animateQ(traj,self.safety)
+                self.IRBRobot.trajGen.animateQWGUI(traj,self)
                 [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayThreePos * paperoffset);
-                self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
+                self.IRBRobot.trajGen.animateQWObjWGUI(traj,self.paper, self)
                 self.paper.MoveObj(self.environment.trayThreePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
-                self.IRBRobot.trajGen.animateQ(traj,self.safety)
+                self.IRBRobot.trajGen.animateQWGUI(traj,self)
             elseif ver == 2
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayThreePos * paperoffset);
-                self.IRBRobot.trajGen.animateQ(traj,self.safety)
+                self.IRBRobot.trajGen.animateQWGUI(traj,self)
                 [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayTwoPos * paperoffset);
-                self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
+                self.IRBRobot.trajGen.animateQWObjWGUI(traj,self.paper, self)
                 self.paper.MoveObj(self.environment.trayTwoPos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
-                self.IRBRobot.trajGen.animateQ(traj,self.safety)
+                self.IRBRobot.trajGen.animateQWGUI(traj,self)
             end
         end
         function updateSafetyVars(self, estop, ir_safety, ir_data)
@@ -209,10 +209,8 @@ classdef GUI < matlab.apps.AppBase & handle
             self.dobotText = event.String;
             self.simStatus.String = "Text Added";
         end
-        function startSim(self, event, app)
-            self.simOn = 1;
-            event.String = 'Resume Sim';
-            while(self.simOn)
+        function runSim(self)
+            if(self.simOn)
                 switch(self.stateMachineVar)
                     case 0
                         disp('Starting Simulation');
@@ -226,25 +224,41 @@ classdef GUI < matlab.apps.AppBase & handle
                         xWrite = write.GetTraj();
                         [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
                         self.simStatus.String = "Dobot Drawing";
-                        self.dobotRobot.trajGen.animateQ(qMatrix,self.safety) % Animate
+                        self.dobotRobot.trajGen.animateQWGUI(qMatrix,self) % Animate
                         [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
                         self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
                         [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.17,0,0.157) * self.dobotRobot.model.base); % Move EE to neutral pose
+                        self.dobotRobot.trajGen.animateQWGUI(qMatrix,self)
                     case 2
-                        self.dobotRobot.trajGen.animateQ(qMatrix,self.safety)
                         self.simStatus.String = "IRB Pick/Place";
                         self.IRBPickAndPlace(2);
                         self.simStatus.String = "Sim Finished";
                 end
-                self.stateMachineVar = self.stateMachineVar +1;
-                if self.stateMachineVar > 2
-                    self.stateMachineVar = 0;
-                end
+            end
+            self.stateMachineVar = self.stateMachineVar +1;
+            if self.stateMachineVar > 2
+                self.stateMachineVar = 0;
+            end
+            self.startSim();
+        end
+        function startSim(self, event, app)
+            self.simOn = 1;
+            event.String = 'Sim Running';
+            if self.safety.emergencyStopState == 0
+                self.runSim();
             end
         end
         function drawText(self,robot,paperHeight,x, qMatrix, desiredTrajOn)
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
+                disp(self.safety);
+                if(self.safety.emergencyStopState)
+                    self.simOn = 0;
+                    break;
+                end
+                while(self.safety.safetyStopState)
+                    pause(0.5);
+                end
                 robot.model.animate(newQ);
                 drawnow();
                 hold on
@@ -469,6 +483,9 @@ classdef GUI < matlab.apps.AppBase & handle
                 if self.safety.emergencyStopState == 1
                     self.safetyJog = 1;
                     self.updateEmergencyState(0);
+                    if self.stateMachineVar > 0
+                        self.stateMachineVar = self.stateMachineVar - 1;
+                    end
                 end
             end
 %             [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),3);
