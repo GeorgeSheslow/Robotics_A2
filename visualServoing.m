@@ -91,53 +91,69 @@ while true
     fprintf('v: %.3f %.3f %.3f %.3f %.3f %.3f\n', v);
 
     % ROBOT MOVEMENT
-    steps = 2;
-    currentPoint = r.model.fkine(r.model.getpos());
-    nextPoint = trnorm(Tcam*trnorm(delta2tr(v)));
-    x = zeros(3,steps);
-    theta = zeros(3,steps);
-    s = lspb(0,1,steps);
-    for i = 1:steps
-        x(1,i) = (1-s(i))*currentPoint(1,4)' + s(i)*nextPoint(1,4)'; % Points in x
-        x(2,i) = (1-s(i))*currentPoint(2,4)' + s(i)*nextPoint(1,4)'; % Points in y
-        x(3,i) = (1-s(i))*currentPoint(3,4)' + s(i)*nextPoint(1,4)'; % Points in z
-        theta(1,i) = 0;                 % Roll angle
-        theta(2,i) = 0;                 % Pitch angle
-        theta(3,i) = 0;                 % Yaw angle
-    end
-    qMatrix = nan(steps,6);
-    T = [rpy2r(0,0,0) x(:,1);zeros(1,3) 1];
-    q0 = r.model.getpos();
-    qMatrix(1,:) = r.model.ikcon(T,q0);
-    m = zeros(steps,1);
-    qdot = zeros(steps,6);
-    for i = 1:steps-1
-        T = r.model.fkine(qMatrix(i,:));
-        deltaX = x(:,i+1) - T(1:3,4);
-        Rd = rpy2r(0,theta(2,i+1),0);
-        Ra = T(1:3,1:3);
-        Rdot = (1/fps)*(Rd-Ra);
-        S = Rdot*Ra';
-        linear_velocity = (1/fps)*deltaX;
-        jacob = r.model.jacob0(qMatrix(i,:));
-        angular_velocity = [S(3,2);S(1,3);S(2,1)];
-        J = jacob;
-        xdot = diag([1 1 1 0.1 0.1 0.1])*[linear_velocity;angular_velocity];
-        m(i) = sqrt(det(J*J'));
-        invJ = inv(J'*J +lambda *eye(6))*J';
-        qdot(i,:) = (invJ*xdot)';
-        for j = 1:6
-            if qMatrix(i,j) + (1/fps)*qdot(i,j) < r.model.qlim(j,1)
-                qdot(i,j) = 0; %stop the motor
-            elseif qMatrix(i,j) + (1/fps)*qdot(i,j) > r.model.qlim(j,2)
-                qdot(i,j) = 0; % stop the motor
-            end
-        end
-        qMatrix(i+1,:) = qMatrix(i,:) + (1/fps)*qdot(i,:);
-    end
-    qMatrix = real(qMatrix);
-    q = qMatrix(2,:);
-    r.model.animate(q);
+    J2 = r.model.jacobn(q0); % jacobian for robot in pose q0
+    Jinv = pinv(J2);
+    % V = dx, dy, dz, dRx, dRy, dRz
+    
+%     qp = Jinv*v;
+%     ind=find(qp>deg2rad(420));
+%          if ~isempty(ind)
+%              qp(ind)=deg2rad(420);
+%          end
+%          ind=find(qp<-deg2rad(420));
+%          if ~isempty(ind)
+%              qp(ind)=-deg2rad(420);
+%          end
+%     q = q0 +(1/fps)*qp;
+
+    r.model.animate(q');
+%     steps = 2;
+%     currentPoint = r.model.fkine(r.model.getpos());
+%     nextPoint = trnorm(Tcam*trnorm(delta2tr(v)));
+%     x = zeros(3,steps);
+%     theta = zeros(3,steps);
+%     s = lspb(0,1,steps);
+%     for i = 1:steps
+%         x(1,i) = (1-s(i))*currentPoint(1,4)' + s(i)*nextPoint(1,4)'; % Points in x
+%         x(2,i) = (1-s(i))*currentPoint(2,4)' + s(i)*nextPoint(1,4)'; % Points in y
+%         x(3,i) = (1-s(i))*currentPoint(3,4)' + s(i)*nextPoint(1,4)'; % Points in z
+%         theta(1,i) = 0;                 % Roll angle
+%         theta(2,i) = 0;                 % Pitch angle
+%         theta(3,i) = 0;                 % Yaw angle
+%     end
+%     qMatrix = nan(steps,6);
+%     T = [rpy2r(0,0,0) x(:,1);zeros(1,3) 1];
+%     q0 = r.model.getpos();
+%     qMatrix(1,:) = r.model.ikcon(T,q0);
+%     m = zeros(steps,1);
+%     qdot = zeros(steps,6);
+%     for i = 1:steps-1
+%         T = r.model.fkine(qMatrix(i,:));
+%         deltaX = x(:,i+1) - T(1:3,4);
+%         Rd = rpy2r(0,theta(2,i+1),0);
+%         Ra = T(1:3,1:3);
+%         Rdot = (1/fps)*(Rd-Ra);
+%         S = Rdot*Ra';
+%         linear_velocity = (1/fps)*deltaX;
+%         jacob = r.model.jacob0(qMatrix(i,:));
+%         angular_velocity = [S(3,2);S(1,3);S(2,1)];
+%         J = jacob;
+%         xdot = diag([1 1 1 0.1 0.1 0.1])*[linear_velocity;angular_velocity];
+%         m(i) = sqrt(det(J*J'));
+%         invJ = inv(J'*J +lambda *eye(6))*J';
+%         qdot(i,:) = (invJ*xdot)';
+%         for j = 1:6
+%             if qMatrix(i,j) + (1/fps)*qdot(i,j) < r.model.qlim(j,1)
+%                 qdot(i,j) = 0; %stop the motor
+%             elseif qMatrix(i,j) + (1/fps)*qdot(i,j) > r.model.qlim(j,2)
+%                 qdot(i,j) = 0; % stop the motor
+%             end
+%         end
+%         qMatrix(i+1,:) = qMatrix(i,:) + (1/fps)*qdot(i,:);
+%     end
+%     qMatrix = real(qMatrix);
+%     q = qMatrix(2,:);
+%     r.model.animate(q);
 
     % compute new camera pose
     Tcam = r.model.fkine(q)*trotz(pi/2)*troty(-pi);
