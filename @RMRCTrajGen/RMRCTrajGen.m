@@ -189,7 +189,11 @@ classdef RMRCTrajGen < handle
         function qMatrix = getRMRC(self, x, theta, steps)
             self.m = zeros(steps,1);             % Array for Measure of Manipulability
             self.qdot = zeros(steps,self.numJoints);          % Array for joint velocities
-            T = [rpy2r(0,0,0) x(:,1);zeros(1,3) 1];          % Create transformation of first point and angle
+            if self.numJoints == 4
+                T = [rpy2r(0,0,0) x(:,1);zeros(1,3) 1];          % Create transformation of first point and angle
+            elseif self.numJoints == 6
+                T = [rpy2r(pi,0,0) x(:,1);zeros(1,3) 1];          % Create transformation of first point and angle
+            end
             q0 = self.robot.getpos();                                                            % Initial guess for joint angles
             qMatrix = zeros(steps,self.numJoints);       % Array for joint anglesR
             qMatrix(1,:) = self.robot.ikcon(T,q0);                                            % Solve joint angles to achieve first waypoint
@@ -198,7 +202,11 @@ classdef RMRCTrajGen < handle
             for i = 1:steps-1
                 T = self.robot.fkine(qMatrix(i,:));                                           % Get forward transformation at current joint state
                 deltaX = x(:,i+1) - T(1:3,4);                                         	% Get position error from next waypoint
-                Rd = rpy2r(0,theta(2,i+1),0);                     % Get next RPY angles, convert to rotation matrix
+                if self.numJoints == 4
+                    Rd = rpy2r(0,theta(2,i+1),0);                     % Get next RPY angles, convert to rotation matrix
+                elseif self.numJoints == 6
+                    Rd = rpy2r(pi,theta(2,i+1),0);                     % Get next RPY angles, convert to rotation matrix
+                end
                 Ra = T(1:3,1:3);                                                        % Current end-effector rotation matrix
                 Rdot = (1/self.deltaT)*(Rd - Ra);                                                % Calculate rotation matrix error
 %                 deltaTheta = tr2rpy(Rd*Ra');                                            % Convert rotation matrix to RPY angles
