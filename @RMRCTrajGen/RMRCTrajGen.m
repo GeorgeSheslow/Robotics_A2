@@ -61,9 +61,11 @@ classdef RMRCTrajGen
             [x, theta] = self.zArcTraj(currentPoint(1:3,4)',point(1:3,4)');
             q = self.getRMRC(x,theta,self.steps);
         end
-        function animateQ(self, qMatrix)
+        function animateQ(self, qMatrix,safetyVars)
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
+%                 while(safetyVars.safetyStopState)
+%                 end
                 self.robot.animate(newQ);
                 drawnow();
                 hold on

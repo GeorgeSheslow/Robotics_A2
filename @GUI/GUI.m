@@ -74,6 +74,9 @@ classdef GUI < matlab.apps.AppBase & handle
         safetyJog = 0;
         stateMachineVar =0;
         simOn = 0;
+        
+        collisionDemoButton;
+        visualServoDemoButton;
     end
     methods 
         function self = GUI()
@@ -84,6 +87,7 @@ classdef GUI < matlab.apps.AppBase & handle
             self.setupCommandButtons();
             self.setupJogButtons();
             self.setupSafetyLEDS();
+            self.setupDemoButtons();
         end
         function IRBPickAndPlace(self,ver)
             waitpoint = [-0.3,0,0.6];
@@ -91,20 +95,20 @@ classdef GUI < matlab.apps.AppBase & handle
             if ver == 1
                 self.paper.MoveObj(self.environment.trayOnePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayOnePos * paperoffset);
-                self.IRBRobot.trajGen.animateQ(traj)
+                self.IRBRobot.trajGen.animateQ(traj,self.safety)
                 [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayThreePos * paperoffset);
                 self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
                 self.paper.MoveObj(self.environment.trayThreePos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
-                self.IRBRobot.trajGen.animateQ(traj)
+                self.IRBRobot.trajGen.animateQ(traj,self.safety)
             elseif ver == 2
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(self.environment.trayThreePos * paperoffset);
-                self.IRBRobot.trajGen.animateQ(traj)
+                self.IRBRobot.trajGen.animateQ(traj,self.safety)
                 [x, traj] = self.IRBRobot.trajGen.getQForZArcTraj(self.environment.trayTwoPos * paperoffset);
                 self.IRBRobot.trajGen.animateQWObj(traj,self.paper)
                 self.paper.MoveObj(self.environment.trayTwoPos * transl(0,0,0.03)*rpy2tr(0,0,pi/2));
                 [x, traj] = self.IRBRobot.trajGen.getQForLineTraj(transl(waitpoint) * self.IRBRobot.model.base);
-                self.IRBRobot.trajGen.animateQ(traj)
+                self.IRBRobot.trajGen.animateQ(traj,self.safety)
             end
         end
         function updateSafetyVars(self, estop, ir_safety, ir_data)
@@ -222,12 +226,12 @@ classdef GUI < matlab.apps.AppBase & handle
                         xWrite = write.GetTraj();
                         [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(xWrite(:,1))); % Use RMRC line traj to get to paper level
                         self.simStatus.String = "Dobot Drawing";
-                        self.dobotRobot.trajGen.animateQ(qMatrix) % Animate
+                        self.dobotRobot.trajGen.animateQ(qMatrix,self.safety) % Animate
                         [x, qMatrix] = self.dobotRobot.trajGen.getQForTraj(xWrite); % Use RMRC to write text
                         self.drawText(self.dobotRobot,write.getDrawingHeight(),x, qMatrix,0); % animate
-                        [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.17,0,0.157) * self.dobotRobot.model.base); % Move EE to neutal pose
+                        [x, qMatrix] = self.dobotRobot.trajGen.getQForLineTraj(transl(0.17,0,0.157) * self.dobotRobot.model.base); % Move EE to neutral pose
                     case 2
-                        self.dobotRobot.trajGen.animateQ(qMatrix)
+                        self.dobotRobot.trajGen.animateQ(qMatrix,self.safety)
                         self.simStatus.String = "IRB Pick/Place";
                         self.IRBPickAndPlace(2);
                         self.simStatus.String = "Sim Finished";
@@ -469,6 +473,19 @@ classdef GUI < matlab.apps.AppBase & handle
             end
 %             [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),3);
 %             robot.trajGen.animateQ(qMatrix)
+        end
+        function setupDemoButtons(self)
+            self.collisionDemoButton = uicontrol("String","Collision Demo",'position',[1490 450 100 30]);
+            self.collisionDemoButton.Callback = @onCollisionDemoButton;
+            self.visualServoDemoButton = uicontrol("String","Visual Servoing Demo",'position',[1480 400 120 30]);
+            self.visualServoDemoButton.Callback = @onVisualServoDemoButton;
+            
+        end
+        function onCollisionDemoButton(self, event, app)
+            disp("Collision Demo");
+        end
+        function onVisualServoDemoButton(self, event, app)
+            disp("Visual Servoing Demo");
         end
     end
 end
