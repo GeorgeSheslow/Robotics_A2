@@ -45,7 +45,7 @@ classdef GUI < matlab.apps.AppBase & handle
         cartButtonNames = ['x+';'x-';'z+';'z-';'y+';'y-'];
         cartBSize = [50 30];
         
-        cartJoggingDelta = 0.02;
+        cartJoggingDelta = 0.03;
         
         % Software Estop
         estopButton
@@ -464,7 +464,6 @@ classdef GUI < matlab.apps.AppBase & handle
             currentPose = robot.model.fkine(robot.model.getpos());
             currentPosition = currentPose(1:3,4);
             desiredPosition = currentPosition;
-
             switch(dir)
                 case 'x+'
                     desiredPosition(1) = desiredPosition(1) + self.cartJoggingDelta;
@@ -481,11 +480,9 @@ classdef GUI < matlab.apps.AppBase & handle
             end
             
             if self.safety.hardwareEstop == 0 && self.safety.guiEstop == 0 && self.safety.safetyStopState == 0 %% need to be able to jog in emergency state
-                
-%             [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),3);
-%             robot.trajGen.animateQ(qMatrix)                
-                
-                q = robot.model.ikcon(transl(desiredPosition));
+%                 [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),10);
+%                 robot.trajGen.animateQ(qMatrix)                
+                q = robot.model.ikcon(transl(desiredPosition), robot.model.getpos());
                 robot.model.animate(q);
                 if self.safety.emergencyStopState == 1
                     self.safetyJog = 1;
