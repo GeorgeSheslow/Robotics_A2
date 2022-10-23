@@ -3,6 +3,7 @@ clf
 clc
 %% IRB120
 r = IRB120(transl(0,0,0));
+r.model.animate([-pi/4, pi/2, -pi/2, 0, 0, 0]);
 %%
 try delete(Link1ellipsoid); end;
 try delete(Link2ellipsoid); end;
@@ -75,7 +76,9 @@ for i = 1:4
     rad = radii{i};
     algebraicDist = GetAlgebraicDist(cubePoints, cP, rad);
     pointInside = find(algebraicDist<1);
-    display(['COLLISION ABORT']);
+    if pointInside > 0
+        display(['COLLISION ABORT']);
+    end
 end
 
 function algebraicDist = GetAlgebraicDist(points, centerPoint, radii)
