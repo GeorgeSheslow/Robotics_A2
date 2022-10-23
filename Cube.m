@@ -1,38 +1,33 @@
 classdef Cube < handle
-    properties (Access = public) % TODO make private after testing
+    properties (Access = public)
         position;
         cubeLength;
         cubeDensity;
         sideLength;
         cubePoints;
         plot_h;
-        oneSideOfCube_h;
     end
     methods 
         function self = Cube(cubeLength, cubeDensity, position)
             self.updateParameters(cubeLength, cubeDensity, position)
-            self.updatePlot();
         end
         function updateParameters(self, cubeLength, cubeDensity, position)
             self.cubeLength = cubeLength;
             self.cubeDensity = cubeDensity;
             self.position = position;
         end
+        function removePlots(self)
+            self.plot_h.reset();
+            refreshdata
+            drawnow            
+        end
         function updatePlot(self)
             self.sideLength = -(self.cubeLength/2):(self.cubeLength/self.cubeDensity):(self.cubeLength/2);
             [Y,Z] = meshgrid(self.sideLength,self.sideLength);
             sizeMat = size(Y);
             X = repmat(self.cubeLength/2,sizeMat(1),sizeMat(2));
-            try
-                self.oneSideOfCube_h.reset()
-            end
-            self.oneSideOfCube_h = surf(X,Y,Z);
-            refreshdata
-            drawnow
             % Combine one surface as a point cloud
             self.cubePoints = [X(:),Y(:),Z(:)];
-
-            % Make a cube by rotating the single side by 0,90,180,270, and around y to make the top and bottom faces
             self.cubePoints = [ self.cubePoints ...
                          ; self.cubePoints * rotz(pi/2)...
                          ; self.cubePoints * rotz(pi) ...

@@ -4,7 +4,23 @@ classdef IRB120 < handle
         workspace = [-1 1 -1 1 -0.2 1.1];
         trajGen;
         toolOffset = [0 0 -0.16];
-
+        
+        % For collision checking
+        centerPoints = [0.0, 0.0, 0.0;
+                0.0, 0.0, 0.0;
+                0.0, 0.0, 0.0;
+                0.0, 0.0, 0.0;
+                0.0, 0.0, 0.0;
+                0.0, 0.0, 0.0;
+                0.0, 0.0, 0.0;];
+            
+        radii = [0.2,0.2,0.2;
+                 0.2,0.2,0.2;
+                 0.2,0.2,0.2;
+                 0.2,0.2,0.2;
+                 0.2,0.2,0.2;
+                 0.2,0.2,0.2;
+                 0.2,0.2,0.2;];
     end
     methods
         function self = IRB120(base)
@@ -15,6 +31,7 @@ classdef IRB120 < handle
             self.trajGen.toolOffset = self.toolOffset;
             self.trajGen.steps = 25;
             self.trajGen.epsilon = 0.035;
+            self.trajGen.setupCollisionChecker(self, self.centerPoints, self.radii);
         end
         %% GetIRB120
         % Create and return an IRB120 robot model

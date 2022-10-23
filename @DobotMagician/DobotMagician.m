@@ -6,6 +6,18 @@ classdef DobotMagician < handle
         toolOffset = [0 0 -0.05];
         defaultQ  = [0,deg2rad(8),deg2rad(133),deg2rad(40)];
         trajGen;
+        
+        centerPoints = [0.0, 0.0, 0.0;
+                        0.0, 0.0, 0.0;
+                        0.0, 0.0, 0.0;
+                        0.0, 0.0, 0.0;
+                        0.0, 0.0, 0.0;];
+
+        radii = [0.1,0.1,0.1;
+                 0.1,0.1,0.1;
+                 0.1,0.1,0.1;
+                 0.1,0.1,0.1;
+                 0.1,0.1,0.1;];
     end
 %% Variables - Private
     properties(Access =private)
@@ -22,6 +34,7 @@ classdef DobotMagician < handle
             self.trajGen = RMRCTrajGen(self.model);
             self.trajGen.toolOffset = self.toolOffset;
             self.trajGen.epsilon = 0.0001;
+            self.trajGen.setupCollisionChecker(self, self.centerPoints, self.radii);
         end
     end
     methods (Access =private)
