@@ -1,6 +1,7 @@
 %% Check arduino serial port
 
 serialportlist("available")'
+
 %% Main Demo
 close all
 clear
@@ -14,3 +15,4 @@ close all
 clear
 clc
 
+vs = VSGUI();

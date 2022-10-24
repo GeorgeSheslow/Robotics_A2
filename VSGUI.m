@@ -13,10 +13,11 @@ classdef VSGUI < matlab.apps.AppBase & handle
         cartBSize = [50 30];
         cartButtonsDobot;
         cartSelectButtonsDobot;
-        cartJoggingDelta = 0.03;
+        cartJoggingDelta = 0.15;
         
         % Cart Buttons for Dobot
         cartBPosDobot = [1220 430];
+        cartDirSelectDobot;
     end
     methods
         function self = VSGUI()
@@ -25,6 +26,8 @@ classdef VSGUI < matlab.apps.AppBase & handle
             hold(self.simPlot_h, 'on');
             self.dobot = DobotMagician(transl(1,0,0)*trotz(pi));
             self.IRB = IRB120(transl(0,0,0));
+            q0 = [0;pi/4;-pi/5;0;pi/2;pi];
+            self.IRB.model.animate(q0');
             hold on
             self.servoing = visualServo(self.dobot, self.IRB);
             
@@ -46,10 +49,11 @@ classdef VSGUI < matlab.apps.AppBase & handle
             
             % Do the thing
             self.servoing.vs();
+
         end
         function onCartButtonsDobot(self, event, app)
             jogType = [self.cartDirSelectDobot,event.String];
-            self.cartJogRobot(self.dobotRobot,jogType);
+            self.cartJogRobot(self.dobot,jogType);
         end
         function OnCartSelectButtonsDobot(self, event, app)
             buttonName = event.String;
@@ -60,6 +64,27 @@ classdef VSGUI < matlab.apps.AppBase & handle
                     self.cartSelectButtonsDobot{i}.Value = 0;
                 end
             end
+        end
+        function cartJogRobot(self,robot, dir)
+            currentPose = robot.model.fkine(robot.model.getpos());
+            currentPosition = currentPose(1:3,4);
+            desiredPosition = currentPosition;
+            switch(dir)
+                case 'x+'
+                    desiredPosition(1) = desiredPosition(1) + self.cartJoggingDelta;
+                case 'x-'
+                    desiredPosition(1) = desiredPosition(1) - self.cartJoggingDelta;
+                case 'y+'
+                    desiredPosition(2) = desiredPosition(2) + self.cartJoggingDelta;
+                case 'y-'
+                    desiredPosition(2) = desiredPosition(2) - self.cartJoggingDelta;
+                case 'z+'
+                    desiredPosition(3) = desiredPosition(3) + self.cartJoggingDelta;
+                case 'z-'
+                    desiredPosition(3) = desiredPosition(3) - self.cartJoggingDelta;
+            end
+            self.servoing.dobotMove(desiredPosition);
+            self.servoing.vs();
         end
     end
 end

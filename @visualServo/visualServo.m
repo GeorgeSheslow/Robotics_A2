@@ -5,6 +5,9 @@ classdef visualServo < handle
         cam
         Tc0
         q0
+        sphere_h;
+        paper;
+        servoingOn;
     end
     methods
         function self = visualServo(r1, r2)
@@ -12,9 +15,7 @@ classdef visualServo < handle
             self.r2 = r2;
             self.cam = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
                 'resolution', [1024 1024], 'centre', [512 512],'name', 'IRBCamera');
-        end
-        function init(self)
-            
+
             self.q0 = (self.r2.model.getpos())';
             self.Tc0 = self.r2.model.fkine(self.q0);
             
@@ -37,11 +38,20 @@ classdef visualServo < handle
             P=[qr1(1),qr1(1),qr1(1),qr1(1);
                 qr1(2)-0.1,qr1(2)+0.1,qr1(2)+0.1,qr1(2)-0.1;
                 qr1(3)+0.35,qr1(3)+0.35,qr1(3)+0.15,qr1(3)+0.15];
-            
-            plot_sphere(P, 0.05, 'b')
+%             try
+%                 self.sphere_h.reset();
+%                 refreshdata
+%                 drawnow
+% 
+%             end
+            self.sphere_h = plot_sphere(P, 0.05, 'b');
             hold on
             pose = self.r1.model.fkine(self.r1.model.getpos())*transl(0.02,0,0.2);
-            paper = Paper(pose*troty(pi/2));
+            try
+                self.paper.MoveObj(pose*troty(pi/2));
+            catch
+                self.paper = Paper(pose*troty(pi/2));
+            end
             drawnow
             
 
@@ -58,14 +68,10 @@ classdef visualServo < handle
             self.cam.hold(true);
 
             self.cam.plot(P); % show initial view
-
-            %initialise display arrays
-            vel_p = [];
-            uv_p = [];
-            history = [];
             %%
             ksteps = 0;
-            while true
+            self.servoingOn = 1;
+            while (true && self.servoingOn == 1)
                 ksteps = ksteps + 1;
                 Zest = [];
 
@@ -120,22 +126,8 @@ classdef visualServo < handle
                 self.cam.T = Tcam;
 
                 drawnow
-
-                hist.uv = uv(:);
-                vel = v;
-                hist.vel = vel;
-                hist.e = e;
-                hist.en = norm(e);
-                hist.jcond = cond(J);
-                hist.Tcam = Tcam;
-                hist.vel_p = vel;
-                hist.uv_p = uv;
-                hist.q = q;
-
-                history = [history hist];
-
                 pause (1/fps)
-                if ~isempty(200) && (ksteps > 200)
+                if ~isempty(200) && (ksteps > 50)
                     break;
                 end
                 self.q0 = q; % update current joint position
@@ -143,10 +135,11 @@ classdef visualServo < handle
             end
         end
 
-        function dobotMove(self)
-            p2 = transl(0.2,0,0.1);
-            [x, traj] = self.r1.trajGen.getQForLineTraj(p2);
-            self.r1.trajGen.plotQAndTraj(traj, x);
+        function dobotMove(self,position)
+            p2 = transl(position);
+            [x, qMatrix] = self.r1.trajGen.getQForLineTraj(p2);
+            self.r1.trajGen.animateQ(qMatrix);
+            self.servoingOn = 0;
 
         end
     end

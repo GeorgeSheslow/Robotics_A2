@@ -9,10 +9,9 @@ q0 = [0;pi/4;-pi/5;0;pi/2;pi];
 rob2.model.animate(q0');
 
 servo = visualServo(rob1, rob2);
-servo.init()
 
 servo.vs();
 
-servo.dobotMove();
+servo.dobotMove([0.2,0,0.1]);
 
 servo.vs();

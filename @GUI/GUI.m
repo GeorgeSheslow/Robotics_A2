@@ -530,10 +530,6 @@ classdef GUI < matlab.apps.AppBase & handle
             self.collisionDirButtons{2}.Callback = @self.onCollisionDirButton;
             self.collisionDirButtons{3}.Callback = @self.onCollisionDirButton;
             
-            
-            % Visual Servoing GUI buttons
-            self.visualServoDemoButton = uicontrol("String","Visual Servoing Demo",'position',[1400 380 120 30]);
-            self.visualServoDemoButton.Callback = @onVisualServoDemoButton;
         end
         function onCollisionDemoButton(self, event, app)
             disp("Collision Demo");
