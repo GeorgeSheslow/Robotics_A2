@@ -31,7 +31,7 @@ classdef visualServo < handle
             lambda = 0.8;
             depth = 1;
             pStar = bsxfun(@plus, 200*[-1 -1 1 1; -1 1 1 -1], self.cam.pp');
-            
+
             qr1 = self.r1.model.fkine(self.r1.model.getpos());
             qr1 = qr1(1:3,4);
             P=[qr1(1),qr1(1),qr1(1),qr1(1);
@@ -141,6 +141,13 @@ classdef visualServo < handle
                 self.q0 = q; % update current joint position
 
             end
+        end
+
+        function dobotMove(self)
+            p2 = transl(0.2,0,0.1);
+            [x, traj] = self.r1.trajGen.getQForLineTraj(p2);
+            self.r1.trajGen.plotQAndTraj(traj, x);
+
         end
     end
 end
