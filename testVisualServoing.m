@@ -9,3 +9,11 @@ q0 = [0;-pi/2;0;0;pi;0];
 rob1.model.animate([0,pi/4,pi/4,pi/2]);
 
 visualServo(rob1, rob2)
+
+%%
+
+close all
+clear
+clc
+
+vs = VSGUI();
