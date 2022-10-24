@@ -162,7 +162,7 @@ classdef GUI < matlab.apps.AppBase & handle
         end
         function setupSim(self)
             % Load Sim Environment
-            self.environment = Environment("Simple");
+            self.environment = Environment("Full");
             
             % Load the 2 Robot
             self.dobotRobot = DobotMagician(transl(-0.6,0,0.72)); %table height: 0.72        
@@ -261,7 +261,7 @@ classdef GUI < matlab.apps.AppBase & handle
             for j = 1:size(qMatrix,1)
                 newQ = qMatrix(j,:);
                 if self.collisionOn
-                    if self.collisionChecker.checkCollision(self.cube.cubePoints)
+                    if robot.trajGen.collisionChecker.checkCollision(self.cube.cubePoints)
                         self.updateEmergencyState(1)
                     end
                 end
