@@ -494,8 +494,13 @@ classdef GUI < matlab.apps.AppBase & handle
             
             if self.safety.hardwareEstop == 0 && self.safety.guiEstop == 0 && self.safety.safetyStopState == 0 %% need to be able to jog in emergency state
 %                 [x, qMatrix] = robot.trajGen.getQForLineTrajWSteps(transl(desiredPosition),10);
-%                 robot.trajGen.animateQ(qMatrix)                
-                q = robot.model.ikcon(transl(desiredPosition), robot.model.getpos());
+%                 robot.trajGen.animateQ(qMatrix)
+                if robot.model.n == 6
+                    desiredPose = transl(desiredPosition) * trotx(pi);
+                elseif robot.model.n == 4
+                    desiredPose = transl(desiredPosition);
+                end
+                q = robot.model.ikcon(desiredPose, robot.model.getpos());
                 robot.model.animate(q);
                 if self.safety.emergencyStopState == 1
                     self.safetyJog = 1;
