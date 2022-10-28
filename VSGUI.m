@@ -13,21 +13,26 @@ classdef VSGUI < matlab.apps.AppBase & handle
         cartBSize = [50 30];
         cartButtonsDobot;
         cartSelectButtonsDobot;
-        cartJoggingDelta = 0.15;
+        cartJoggingDelta = 0.07;
         
         % Cart Buttons for Dobot
         cartBPosDobot = [1220 430];
         cartDirSelectDobot;
+        
+        environment;
     end
     methods
         function self = VSGUI()
             self.fig = figure('units','normalized','outerposition',[0 0 1 1]);
             self.simPlot_h = subplot(1,2,1);
             hold(self.simPlot_h, 'on');
-            self.dobot = DobotMagician(transl(1,0,0)*trotz(pi));
-            self.IRB = IRB120(transl(0,0,0));
+            self.dobot = DobotMagician(transl(1,0,0.72)*trotz(pi));
+            hold on
+            self.IRB = IRB120(transl(0,0,0.72));
             q0 = [0;pi/4;-pi/5;0;pi/2;pi];
             self.IRB.model.animate(q0');
+            hold on
+            self.environment = Environment("Full",(transl(0.3,0,0) * rpy2tr(0,0,pi)));
             hold on
             self.servoing = visualServo(self.dobot, self.IRB);
             
