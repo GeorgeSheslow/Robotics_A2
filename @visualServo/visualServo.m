@@ -5,7 +5,7 @@ classdef visualServo < handle
         cam
         Tc0
         q0
-        sphere_h;
+        sign_h;
         paper;
         servoingOn;
     end
@@ -33,29 +33,21 @@ classdef visualServo < handle
             depth = 1;
             pStar = bsxfun(@plus, 200*[-1 -1 1 1; -1 1 1 -1], self.cam.pp');
 
-            qr1 = self.r1.model.fkine(self.r1.model.getpos());
-            qr1 = qr1(1:3,4);
-            P=[qr1(1),qr1(1),qr1(1),qr1(1);
-                qr1(2)-0.1,qr1(2)+0.1,qr1(2)+0.1,qr1(2)-0.1;
-                qr1(3)+0.35,qr1(3)+0.35,qr1(3)+0.15,qr1(3)+0.15];
-%             try
-%                 self.sphere_h.reset();
-%                 refreshdata
-%                 drawnow
-% 
-%             end
-            self.sphere_h = plot_sphere(P, 0.05, 'b');
+            qt1 = self.r1.model.fkine(self.r1.model.getpos());
+            qr1 = qt1(1:3,4);
+%             P=[qr1(1),qr1(1),qr1(1),qr1(1);
+%                 qr1(2)-0.1,qr1(2)+0.1,qr1(2)+0.1,qr1(2)-0.1;
+%                 qr1(3)+0.35,qr1(3)+0.35,qr1(3)+0.15,qr1(3)+0.15];
+            hold on;
+            try
+                self.sign_h.updatePlot(qt1);
+            catch
+                self.sign_h = SafetySign(qt1);
+            end
+            P = self.sign_h.p;
+                
             hold on
             pose = self.r1.model.fkine(self.r1.model.getpos())*transl(0.02,0,0.2);
-            try
-                self.paper.MoveObj(pose*troty(pi/2));
-            catch
-                self.paper = Paper(pose*troty(pi/2));
-            end
-            drawnow
-            
-
-           
 
             %% plotting graph
             p = self.cam.plot(P, 'Tcam', self.Tc0);
