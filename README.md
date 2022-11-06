@@ -44,3 +44,6 @@ The aim of this project was to create and simulate a robotic system that was cap
 Script RealDobotDrawing.m can be used with a real Dobot Magician to draw text on a piece of paper.
 
 - Requires ROS MATLAB Toolbox 
+- Dobot Magician Driver: https://github.com/gapaul/dobot_magician_driver/
+- Instructions for setting up hardware/ROS to interface with MATLAB: https://github.com/gapaul/dobot_magician_driver/wiki
+
