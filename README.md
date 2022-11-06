@@ -2,7 +2,7 @@
 ### 41013 Industrial Robotics 
 ### Assignment 2 
 
-![alt text](https://drive.google.com/file/d/1v1pmyDPNmtm5L4uufSYCkIa_-ZKD8Kso/view?usp=share_link)
+![alt text](https://github.com/GeorgeSheslow/Robotics_A2/blob/documentation/Simulation_Image.png)
 
 ## Video Links
 
@@ -37,3 +37,10 @@ The aim of this project was to create and simulate a robotic system that was cap
 - Safety: 2 Action emergency stop with GUI Estop and hardware EStop and collision
 - Safety: Hardware IR sensor if distance below threshold will pause the simulation 
 - Collision Checking with point cloud cube
+- Visual Servoing demonstration with 2 robots
+
+### Real Dobot Drawing
+
+Script RealDobotDrawing.m can be used with a real Dobot Magician to draw text on a piece of paper.
+
+- Requires ROS MATLAB Toolbox 
