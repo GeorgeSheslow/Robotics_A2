@@ -37,3 +37,4 @@ The aim of this project was to create and simulate a robotic system that was cap
 - Safety: 2 Action emergency stop with GUI Estop and hardware EStop and collision
 - Safety: Hardware IR sensor if distance below threshold will pause the simulation 
 - Collision Checking with point cloud cube
+- Visual Servoing demonstration with 2 robots
