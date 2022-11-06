@@ -2,7 +2,7 @@
 ### 41013 Industrial Robotics 
 ### Assignment 2 
 
-![alt text](https://drive.google.com/file/d/1v1pmyDPNmtm5L4uufSYCkIa_-ZKD8Kso/view?usp=share_link)
+![alt text](https://github.com/GeorgeSheslow/Robotics_A2/blob/documentation/Simulation_Image.png)
 
 ## Video Links
 
