@@ -162,7 +162,7 @@ classdef GUI < matlab.apps.AppBase & handle
         end
         function setupSim(self)
             % Load Sim Environment
-            self.environment = Environment("Full");
+            self.environment = Environment("Full",transl(0,0,0));
             
             % Load the 2 Robot
             self.dobotRobot = DobotMagician(transl(-0.6,0,0.72)); %table height: 0.72        

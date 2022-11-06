@@ -1,3 +1,7 @@
+%% 
+
+% Code adapted from: https://github.com/clams-casino/sketch_to_coordinates
+%%
 classdef TextToTraj < handle
     properties(Access =public)
         word;
@@ -242,16 +246,16 @@ classdef TextToTraj < handle
                     x = (paths{path}(2,i) - 0.5) * S;
                     y = (size(img,1) - paths{path}(1,i) + 0.5) * S;
                     path_coord = [path_coord [x ; y]];
-                
+                    
                 end
                 
                 path_coordinates{end+1} = path_coord; %%TODO preallocate
                 
             end
         end
-
-        function trimmed_path = trimPath(paths,min_length)
         
+        function trimmed_path = trimPath(paths,min_length)
+            
             trimmed_path = {};
             
             for i = 1:size(paths,2)
@@ -260,6 +264,6 @@ classdef TextToTraj < handle
                 end
             end
         end
-
+        
     end
 end
